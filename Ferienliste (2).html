@@ -1068,6 +1068,23 @@
             padding: 9px 16px;
             color: var(--ink-2);
         }
+        #sortNamesHeader {
+            cursor: pointer;
+            user-select: none;
+        }
+        #sortNamesHeader:hover { color: var(--ink); }
+        #sortNamesHeader .sort-indicator {
+            display: inline-block;
+            margin-left: 5px;
+            opacity: 0.35;
+            font-size: 10px;
+            font-style: normal;
+        }
+        #sortNamesHeader.sort-asc .sort-indicator,
+        #sortNamesHeader.sort-desc .sort-indicator {
+            opacity: 1;
+            color: var(--green);
+        }
         .overview-table thead th.sortable {
             cursor: pointer;
             user-select: none;
@@ -1294,7 +1311,9 @@
                 <table class="planner-table">
                     <thead>
                         <tr>
-                            <th style="text-align:left;padding-left:16px;width:200px;">Name</th>
+                            <th id="sortNamesHeader" style="text-align:left;padding-left:16px;width:200px;" title="Nach Name sortieren">
+                                Name <span class="sort-indicator">⇅</span>
+                            </th>
                             <th style="text-align:center;border-left:1px solid var(--border-soft);">Woche</th>
                             <th class="day-header" data-day="0">Mo</th>
                             <th class="day-header" data-day="1">Di</th>
@@ -1736,6 +1755,26 @@
                             this.render();
                         }
                     }
+                });
+
+                // Sort main name list by clicking the Name header
+                document.getElementById('sortNamesHeader').addEventListener('click', () => {
+                    const header = document.getElementById('sortNamesHeader');
+                    const indicator = header.querySelector('.sort-indicator');
+                    if (header.classList.contains('sort-asc')) {
+                        // Switch to descending
+                        header.classList.replace('sort-asc', 'sort-desc');
+                        indicator.textContent = '↓';
+                        this.people.sort((a, b) => b.name.trim().localeCompare(a.name.trim(), 'de'));
+                    } else {
+                        // Ascending (first click or from desc)
+                        header.classList.remove('sort-desc');
+                        header.classList.add('sort-asc');
+                        indicator.textContent = '↑';
+                        this.people.sort((a, b) => a.name.trim().localeCompare(b.name.trim(), 'de'));
+                    }
+                    this.saveData(`klassen/${this.currentClass}`, this.data[this.currentClass]);
+                    this.renderTable(true);
                 });
 
                 // Overview modal
