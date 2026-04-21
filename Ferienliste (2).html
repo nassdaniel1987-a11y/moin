@@ -1068,6 +1068,23 @@
             padding: 9px 16px;
             color: var(--ink-2);
         }
+        .overview-table thead th.sortable {
+            cursor: pointer;
+            user-select: none;
+        }
+        .overview-table thead th.sortable:hover { color: var(--ink); }
+        .sort-indicator {
+            display: inline-block;
+            margin-left: 4px;
+            opacity: 0.35;
+            font-style: normal;
+            font-size: 10px;
+        }
+        .overview-table thead th.sort-asc .sort-indicator,
+        .overview-table thead th.sort-desc .sort-indicator {
+            opacity: 1;
+            color: var(--green);
+        }
 
         /* ═══════════════════════════════════════════
            FLOATING BUTTON
@@ -1415,13 +1432,13 @@
 
             <!-- Tab: List -->
             <div id="tabContentList" style="flex:1;overflow-y:auto;background:var(--bg);">
-                <table class="overview-table">
+                <table class="overview-table" id="overviewListTable">
                     <thead>
                         <tr>
-                            <th>Klasse</th>
-                            <th>Vorname</th>
-                            <th>Nachname</th>
-                            <th>Datum</th>
+                            <th class="sortable" data-sort="className">Klasse <span class="sort-indicator">⇅</span></th>
+                            <th class="sortable" data-sort="vorname">Vorname <span class="sort-indicator">⇅</span></th>
+                            <th class="sortable" data-sort="nachname">Nachname <span class="sort-indicator">⇅</span></th>
+                            <th class="sortable" data-sort="dateObj">Datum <span class="sort-indicator">⇅</span></th>
                         </tr>
                     </thead>
                     <tbody id="overviewListBody"></tbody>
@@ -1481,6 +1498,8 @@
                 this.isDecrypting = false;
                 this.isDecryptedOnce = false;
                 this._lastRenderKey = null;
+                this.overviewListSortCol = 'className';
+                this.overviewListSortDir = 'asc';
 
                 this.initializeTheme();
                 this.bindEvents();
@@ -1742,6 +1761,20 @@
 
                 document.getElementById('exportCsvBtn').addEventListener('click', () => this.exportToExcel());
                 document.getElementById('overviewExportBtn').addEventListener('click', () => { this.exportToExcel(); this.hideOverviewModal(); });
+
+                // Overview list table: sortable column headers
+                document.querySelectorAll('#overviewListTable th.sortable').forEach(th => {
+                    th.addEventListener('click', () => {
+                        const col = th.dataset.sort;
+                        if (this.overviewListSortCol === col) {
+                            this.overviewListSortDir = this.overviewListSortDir === 'asc' ? 'desc' : 'asc';
+                        } else {
+                            this.overviewListSortCol = col;
+                            this.overviewListSortDir = 'asc';
+                        }
+                        this.renderOverviewData();
+                    });
+                });
 
                 // Sidebar toggle
                 document.addEventListener('click', (e) => {
@@ -2301,13 +2334,35 @@
                 listBody.innerHTML = '';
                 summaryBody.innerHTML = '';
 
-                if (listData.length === 0) {
+                // Apply current sort to listData
+                const col = this.overviewListSortCol;
+                const dir = this.overviewListSortDir;
+                const sortedList = [...listData].sort((a, b) => {
+                    let cmp = col === 'dateObj'
+                        ? a.dateObj - b.dateObj
+                        : (a[col] || '').localeCompare(b[col] || '', 'de');
+                    return dir === 'asc' ? cmp : -cmp;
+                });
+
+                // Update sort indicators on headers
+                document.querySelectorAll('#overviewListTable th.sortable').forEach(th => {
+                    th.classList.remove('sort-asc', 'sort-desc');
+                    const indicator = th.querySelector('.sort-indicator');
+                    if (th.dataset.sort === col) {
+                        th.classList.add(dir === 'asc' ? 'sort-asc' : 'sort-desc');
+                        indicator.textContent = dir === 'asc' ? '↑' : '↓';
+                    } else {
+                        indicator.textContent = '⇅';
+                    }
+                });
+
+                if (sortedList.length === 0) {
                     listBody.closest('table').style.display = 'none';
                     listEmpty.style.display = '';
                 } else {
                     listBody.closest('table').style.display = '';
                     listEmpty.style.display = 'none';
-                    listData.forEach(r => {
+                    sortedList.forEach(r => {
                         const tr = document.createElement('tr');
                         tr.innerHTML = `<td>${r.className}</td><td style="font-weight:500;">${r.vorname}</td><td style="font-weight:700;color:var(--ink);">${r.nachname}</td><td>${r.formattedDate}</td>`;
                         listBody.appendChild(tr);
