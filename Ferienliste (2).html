@@ -611,6 +611,10 @@
         }
         .row-action-btn:hover { background: var(--surface-2); color: var(--ink-2); }
         .row-action-btn.delete:hover { background: var(--red-light); color: var(--red); }
+        .row-action-btn.absent-btn.is-absent { color: var(--red); }
+        .row-action-btn.absent-btn.is-absent:hover { background: var(--red-light); color: var(--red); }
+        .table-row.row-absent { background: color-mix(in srgb, var(--red) 7%, transparent) !important; }
+        .table-row.row-absent .name-input { color: var(--ink-muted); }
 
         /* ═══════════════════════════════════════════
            CUSTOM CHECKBOX
@@ -1662,10 +1666,10 @@
 
             getInitialData() {
                 return {
-                    class1: { people: [], attendance: {} },
-                    class2: { people: [], attendance: {} },
-                    class3: { people: [], attendance: {} },
-                    class4: { people: [], attendance: {} },
+                    class1: { people: [], attendance: {}, absentPersons: {} },
+                    class2: { people: [], attendance: {}, absentPersons: {} },
+                    class3: { people: [], attendance: {}, absentPersons: {} },
+                    class4: { people: [], attendance: {}, absentPersons: {} },
                 };
             }
 
@@ -1870,6 +1874,16 @@
                     if (selBtn) this.selectAllAvailable(selBtn.dataset.personId, new Date(selBtn.dataset.monday));
                     const delBtn = e.target.closest('[data-action="delete-person"]');
                     if (delBtn) this.deletePerson(Number(delBtn.dataset.index));
+                    const absentBtn = e.target.closest('[data-action="toggle-absent"]');
+                    if (absentBtn) {
+                        const pid = absentBtn.dataset.personId;
+                        const cls = this.data[this.currentClass];
+                        if (!cls.absentPersons) cls.absentPersons = {};
+                        cls.absentPersons[pid] = !cls.absentPersons[pid];
+                        if (!cls.absentPersons[pid]) delete cls.absentPersons[pid];
+                        this.saveData(`klassen/${this.currentClass}`, cls);
+                        this.renderTable(true);
+                    }
                 });
                 tbody.addEventListener('blur', (e) => {
                     const inp = e.target.closest('[data-action="rename-person"]');
@@ -2048,9 +2062,11 @@
                 const numWeeks = weeksToRender.length;
                 const groupClass = index % 2 === 0 ? 'group-even' : 'group-odd';
 
+                const isAbsent = !isEmpty && !!(this.data[this.currentClass].absentPersons?.[person.id]);
+
                 weeksToRender.forEach((monday, weekIdx) => {
                     const row = document.createElement('tr');
-                    row.className = `table-row ${groupClass}`;
+                    row.className = `table-row ${groupClass}${isAbsent ? ' row-absent' : ''}`;
 
                     // Name cell (first week only, spans all weeks)
                     if (weekIdx === 0) {
@@ -2159,6 +2175,14 @@
                         wrap.appendChild(selBtn);
 
                         if (weekIdx === 0) {
+                            const absentBtn = document.createElement('button');
+                            absentBtn.className = `row-action-btn absent-btn${isAbsent ? ' is-absent' : ''}`;
+                            absentBtn.title = isAbsent ? 'Anwesenheit wiederherstellen' : 'Person als abwesend markieren';
+                            absentBtn.innerHTML = `<svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><circle cx="12" cy="12" r="9"/><path stroke-linecap="round" d="M4.93 4.93l14.14 14.14"/></svg>`;
+                            absentBtn.dataset.action = 'toggle-absent';
+                            absentBtn.dataset.personId = person.id;
+                            wrap.appendChild(absentBtn);
+
                             const delBtn = document.createElement('button');
                             delBtn.className = 'row-action-btn delete';
                             delBtn.title = 'Person löschen';
@@ -2313,6 +2337,7 @@
                     cd.people.forEach(person => {
                         const fullName = person.name.trim();
                         if (!fullName) return;
+                        if (cd.absentPersons?.[person.id]) return;
                         const parts = fullName.split(' ');
                         let vorname = '', nachname = '';
                         if (parts.length > 1) { nachname = parts.pop(); vorname = parts.join(' '); }
