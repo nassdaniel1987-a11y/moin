@@ -11,24 +11,6 @@
     </script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.2.0/crypto-js.min.js"></script>
     <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
-        import { getDatabase, ref, set, onValue } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-database.js";
-        window.firebaseApp = initializeApp({
-            apiKey: "AIzaSyBUXX3MVm_2R0RhmKT7isEj7zql0bjz0Cw",
-            authDomain: "schule-f388f.firebaseapp.com",
-            projectId: "schule-f388f",
-            storageBucket: "schule-f388f.firebasestorage.app",
-            messagingSenderId: "1075295085916",
-            appId: "1:1075295085916:web:fcdc3ee47465b5cb868d99",
-            databaseURL: "https://schule-f388f-default-rtdb.europe-west1.firebasedatabase.app"
-        });
-        window.firebaseDB = getDatabase(window.firebaseApp);
-        window.firebaseRef = ref;
-        window.firebaseSet = set;
-        window.firebaseOnValue = onValue;
-        window.dispatchEvent(new Event('firebase_loaded'));
-    </script>
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -1148,9 +1130,27 @@
 <body>
 
     <!-- ═══════════════════════════════════ -->
+    <!--  FILE PICKER OVERLAY               -->
+    <!-- ═══════════════════════════════════ -->
+    <div id="filePickerOverlay" style="position:fixed;inset:0;background:var(--green);z-index:101;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:20px;">
+        <div class="overlay-dots"></div>
+        <div class="unlock-card slide-up" style="gap:14px;">
+            <div class="unlock-icon">
+                <svg width="22" height="22" fill="none" stroke="white" viewBox="0 0 24 24" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M3 7a2 2 0 012-2h4l2 2h8a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V7z"/>
+                </svg>
+            </div>
+            <h2 class="unlock-title">Ferienplaner</h2>
+            <p class="unlock-subtitle">Wähle deine Datendatei oder erstelle eine neue.</p>
+            <button id="openFileBtn" class="unlock-btn" style="margin-top:4px;">Bestehende Datei öffnen</button>
+            <button id="newFileBtn" class="unlock-btn" style="background:rgba(255,255,255,0.15);margin-top:0;">Neue Datei erstellen</button>
+        </div>
+    </div>
+
+    <!-- ═══════════════════════════════════ -->
     <!--  PASSWORD OVERLAY                  -->
     <!-- ═══════════════════════════════════ -->
-    <div id="passwordOverlay">
+    <div id="passwordOverlay" style="display:none;">
         <div class="overlay-dots"></div>
         <div class="unlock-card slide-up">
             <div class="unlock-icon">
@@ -1165,7 +1165,7 @@
                 <p id="passwordError" class="unlock-error">Falsches Passwort oder Verbindungsfehler</p>
                 <button type="submit" class="unlock-btn">Entsperren</button>
             </form>
-            <button type="button" id="resetDbBtn" class="unlock-reset">Passwort vergessen? (Datenbank zurücksetzen)</button>
+            <button type="button" id="resetDbBtn" class="unlock-reset">Andere Datei wählen</button>
         </div>
     </div>
 
@@ -1525,35 +1525,20 @@
                 this.overviewListSortCol = 'className';
                 this.overviewListSortDir = 'asc';
 
+                this.fileHandle = null;
+
                 this.initializeTheme();
                 this.bindEvents();
-                this.setupFirebaseListener();
                 this.render();
             }
 
-            setupFirebaseListener() {
-                if (window.firebaseDB) {
-                    this.initFirebaseDB();
-                } else {
-                    window.addEventListener('firebase_loaded', () => this.initFirebaseDB());
-                }
-            }
-
-            initFirebaseDB() {
-                const connectedRef = window.firebaseRef(window.firebaseDB, '.info/connected');
-                window.firebaseOnValue(connectedRef, (snap) => {
-                    const dot  = document.getElementById('statusDot');
-                    const text = document.getElementById('statusText');
-                    if (snap.val() === true) {
-                        this.isDBConnected = true;
-                        if (dot)  { dot.classList.add('connected'); }
-                        if (text) { text.textContent = 'Verbunden'; text.style.color = 'rgba(94,207,132,0.8)'; }
-                    } else {
-                        this.isDBConnected = false;
-                        if (dot)  { dot.classList.remove('connected'); }
-                        if (text) { text.textContent = 'Offline'; text.style.color = 'rgba(255,255,255,0.4)'; }
-                    }
-                });
+            showPasswordOverlay() {
+                document.getElementById('filePickerOverlay').style.display = 'none';
+                document.getElementById('passwordOverlay').style.display = 'flex';
+                const dot  = document.getElementById('statusDot');
+                const text = document.getElementById('statusText');
+                if (dot)  dot.style.display = 'none';
+                if (text) { text.textContent = '📄 ' + this.fileHandle.name; text.style.color = 'rgba(255,255,255,0.65)'; }
             }
 
             // ── Encryption ──────────────────────────────────────────
@@ -1574,67 +1559,74 @@
             // ── Unlock ───────────────────────────────────────────────
             unlockApp(password) {
                 this.encryptionKey = password;
-                const dataRef = window.firebaseRef(window.firebaseDB, '/');
+                const errorEl = document.getElementById('passwordError');
+                const overlay = document.getElementById('passwordOverlay');
 
-                window.firebaseOnValue(dataRef, (snapshot) => {
-                    const val = snapshot.val();
-                    const errorEl  = document.getElementById('passwordError');
-                    const overlay  = document.getElementById('passwordOverlay');
+                this.fileHandle.getFile().then(f => f.text()).then(text => {
+                    const val = text.trim() ? JSON.parse(text) : null;
 
-                    if (!val) {
-                        this.saveData('specialDays', this.specialDays);
-                        Object.keys(this.data).forEach(k => this.saveData(`klassen/${k}`, this.data[k]));
+                    if (!val || !val.specialDays) {
+                        // Neue/leere Datei – Initialdaten speichern
+                        this.saveToLocalFile();
                         overlay.style.opacity = '0';
                         setTimeout(() => overlay.style.display = 'none', 350);
                         this.render(true);
                         return;
                     }
 
-                    if (val.specialDays) {
-                        const decSD = this.decryptData(val.specialDays);
-                        if (!decSD) {
-                            errorEl.style.display = 'block';
-                            this.encryptionKey = null;
-                            return;
-                        }
-                        errorEl.style.display = 'none';
-                        overlay.style.opacity = '0';
-                        setTimeout(() => overlay.style.display = 'none', 350);
-
-                        this.specialDays = decSD;
-                        if (val.klassen) {
-                            Object.keys(val.klassen).forEach(k => {
-                                const dec = this.decryptData(val.klassen[k]);
-                                if (dec) this.data[k] = dec;
-                            });
-                        }
-                        this.isDataLoaded = true;
-
-                        if (!this.isDecryptedOnce) { this.isDecrypting = true; this.isDecryptedOnce = true; }
-                        else                         { this.isDecrypting = false; }
-
-                        this._lastRenderKey = null;
-                        this.updateQuickNav();
-                        this.render(true);
-
-                        if (this.isDecrypting) setTimeout(() => { this.isDecrypting = false; }, 1600);
+                    const decSD = this.decryptData(val.specialDays);
+                    if (!decSD) {
+                        errorEl.style.display = 'block';
+                        this.encryptionKey = null;
+                        return;
                     }
-                }, (error) => {
-                    const errorEl = document.getElementById('passwordError');
-                    if (errorEl) { errorEl.textContent = 'Verbindungsfehler: ' + error.message; errorEl.style.display = 'block'; }
+
+                    errorEl.style.display = 'none';
+                    overlay.style.opacity = '0';
+                    setTimeout(() => overlay.style.display = 'none', 350);
+
+                    this.specialDays = decSD;
+                    if (val.klassen) {
+                        Object.keys(val.klassen).forEach(k => {
+                            const dec = this.decryptData(val.klassen[k]);
+                            if (dec) this.data[k] = dec;
+                        });
+                    }
+                    this.isDataLoaded = true;
+
+                    if (!this.isDecryptedOnce) { this.isDecrypting = true; this.isDecryptedOnce = true; }
+                    else { this.isDecrypting = false; }
+
+                    this._lastRenderKey = null;
+                    this.updateQuickNav();
+                    this.render(true);
+
+                    if (this.isDecrypting) setTimeout(() => { this.isDecrypting = false; }, 1600);
+                }).catch(() => {
+                    errorEl.textContent = 'Fehler beim Lesen der Datei.';
+                    errorEl.style.display = 'block';
                 });
             }
 
             // ── Save ─────────────────────────────────────────────────
-            saveData(path, dataObj) {
-                if (!this.encryptionKey || !this.isDBConnected) return;
+            saveData() { this.saveToLocalFile(); }
+
+            async saveToLocalFile() {
+                if (!this.fileHandle || !this.encryptionKey) return;
                 this.showSaveIndicator('saving');
-                const enc = this.encryptData(dataObj);
-                if (enc) {
-                    window.firebaseSet(window.firebaseRef(window.firebaseDB, path), enc)
-                        .then(() => this.showSaveIndicator('saved'))
-                        .catch(() => this.showSaveIndicator('error'));
-                }
+                try {
+                    const payload = {
+                        specialDays: this.encryptData(this.specialDays),
+                        klassen: {}
+                    };
+                    Object.keys(this.data).forEach(k => {
+                        payload.klassen[k] = this.encryptData(this.data[k]);
+                    });
+                    const writable = await this.fileHandle.createWritable();
+                    await writable.write(JSON.stringify(payload, null, 2));
+                    await writable.close();
+                    this.showSaveIndicator('saved');
+                } catch { this.showSaveIndicator('error'); }
             }
 
             showSaveIndicator(state) {
@@ -1719,13 +1711,31 @@
                 });
 
                 document.getElementById('resetDbBtn').addEventListener('click', () => {
-                    if (confirm('WARNUNG: Möchten Sie die Datenbank wirklich unwiderruflich löschen? Alle bisherigen Daten gehen dabei sofort verloren!')) {
-                        if (confirm('Sind Sie sich absolut sicher? Dies kann NICHT rückgängig gemacht werden.')) {
-                            window.firebaseSet(window.firebaseRef(window.firebaseDB, '/'), null)
-                                .then(() => { alert('Datenbank gelöscht. Die Seite wird neu geladen.'); window.location.reload(); })
-                                .catch(err => alert('Fehler: ' + err.message));
-                        }
-                    }
+                    document.getElementById('passwordOverlay').style.display = 'none';
+                    document.getElementById('filePickerOverlay').style.display = 'flex';
+                    document.getElementById('appPassword').value = '';
+                    document.getElementById('passwordError').style.display = 'none';
+                });
+
+                // File picker buttons
+                document.getElementById('openFileBtn').addEventListener('click', async () => {
+                    try {
+                        const [handle] = await window.showOpenFilePicker({
+                            types: [{ description: 'JSON-Datei', accept: { 'application/json': ['.json'] } }]
+                        });
+                        this.fileHandle = handle;
+                        this.showPasswordOverlay();
+                    } catch {} // Nutzer hat abgebrochen
+                });
+                document.getElementById('newFileBtn').addEventListener('click', async () => {
+                    try {
+                        const handle = await window.showSaveFilePicker({
+                            suggestedName: 'ferienplaner.json',
+                            types: [{ description: 'JSON-Datei', accept: { 'application/json': ['.json'] } }]
+                        });
+                        this.fileHandle = handle;
+                        this.showPasswordOverlay();
+                    } catch {} // Nutzer hat abgebrochen
                 });
 
                 document.getElementById('themeToggle').addEventListener('click', () => {
