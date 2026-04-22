@@ -617,6 +617,43 @@
         .table-row.row-absent .name-input { color: var(--ink-muted); }
         .table-row.row-absent .day-cell { pointer-events: none; opacity: 0.25; }
 
+        /* Add-person bar */
+        #addPersonBar {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 11px 22px;
+            background: var(--surface);
+            border-top: 1px solid var(--border-soft);
+        }
+        #addPersonBar label {
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.09em;
+            color: var(--ink-faint);
+            white-space: nowrap;
+        }
+        #newPersonInput {
+            flex: 1;
+            max-width: 260px;
+            background: var(--bg);
+            border: 1.5px solid var(--border);
+            border-radius: var(--radius);
+            color: var(--ink);
+            font-family: 'DM Sans', sans-serif;
+            font-size: 13.5px;
+            font-weight: 500;
+            padding: 6px 10px;
+            outline: none;
+            transition: border-color 150ms, box-shadow 150ms;
+        }
+        #newPersonInput:focus {
+            border-color: var(--green-mid);
+            box-shadow: 0 0 0 3px rgba(61,122,82,0.12);
+        }
+        #newPersonInput::placeholder { color: var(--ink-faint); font-weight: 400; }
+
         /* ═══════════════════════════════════════════
            CUSTOM CHECKBOX
         ═══════════════════════════════════════════ */
@@ -1331,6 +1368,16 @@
                     <tbody id="tableBody"></tbody>
                 </table>
             </div>
+            <div id="addPersonBar">
+                <label for="newPersonInput">Neue Person</label>
+                <input type="text" id="newPersonInput" placeholder="Vorname Nachname…" autocomplete="off" maxlength="80">
+                <button id="addPersonBtn" class="btn btn-success" style="padding:7px 15px;font-size:13px;">
+                    <svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/>
+                    </svg>
+                    Hinzufügen
+                </button>
+            </div>
 
         </main>
     </div>
@@ -1908,6 +1955,25 @@
                         e.preventDefault(); e.target.blur();
                     }
                 });
+
+                const newPersonInput = document.getElementById('newPersonInput');
+                const addPersonBtn   = document.getElementById('addPersonBtn');
+
+                const commitNewPerson = () => {
+                    const val = newPersonInput.value.trim();
+                    if (!val || !this.isDataLoaded) return;
+                    const pid = Date.now().toString();
+                    this.people.push({ name: val, id: pid });
+                    this.saveData(`klassen/${this.currentClass}`, this.data[this.currentClass]);
+                    newPersonInput.value = '';
+                    newPersonInput.focus();
+                    this.render(true);
+                };
+
+                addPersonBtn.addEventListener('click', commitNewPerson);
+                newPersonInput.addEventListener('keydown', (e) => {
+                    if (e.key === 'Enter') { e.preventDefault(); commitNewPerson(); }
+                });
             }
 
             render(force = false) {
@@ -2021,8 +2087,6 @@
                         this.createPersonRows(person, idx, false, weeks).forEach(r => tbody.appendChild(r));
                     }
                 });
-                this.createPersonRows({ name: '', id: Date.now().toString() }, this.people.length, true, weeks)
-                    .forEach(r => tbody.appendChild(r));
             }
 
             createSkeletonRow() {
