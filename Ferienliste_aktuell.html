@@ -1,0 +1,2510 @@
+<!DOCTYPE html>
+<html lang="de">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ferienplaner – Anwesenheitsverwaltung</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = { darkMode: 'class' }
+    </script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.2.0/crypto-js.min.js"></script>
+    <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
+        import { getDatabase, ref, set, onValue } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-database.js";
+        window.firebaseApp = initializeApp({
+            apiKey: "AIzaSyBUXX3MVm_2R0RhmKT7isEj7zql0bjz0Cw",
+            authDomain: "schule-f388f.firebaseapp.com",
+            projectId: "schule-f388f",
+            storageBucket: "schule-f388f.firebasestorage.app",
+            messagingSenderId: "1075295085916",
+            appId: "1:1075295085916:web:fcdc3ee47465b5cb868d99",
+            databaseURL: "https://schule-f388f-default-rtdb.europe-west1.firebasedatabase.app"
+        });
+        window.firebaseDB = getDatabase(window.firebaseApp);
+        window.firebaseRef = ref;
+        window.firebaseSet = set;
+        window.firebaseOnValue = onValue;
+        window.dispatchEvent(new Event('firebase_loaded'));
+    </script>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700;800&family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    <style>
+        /* ═══════════════════════════════════════════
+           DESIGN TOKENS
+        ═══════════════════════════════════════════ */
+        :root {
+            --bg:           #f5f0e8;
+            --bg-alt:       #ede8dc;
+            --surface:      #faf7f2;
+            --surface-2:    #f0ebe0;
+            --border:       #d4c9b4;
+            --border-soft:  #e4dcd0;
+
+            --ink:          #1a1410;
+            --ink-2:        #3d3325;
+            --ink-muted:    #7a6e5f;
+            --ink-faint:    #b0a494;
+
+            --green:        #2d5a3d;
+            --green-mid:    #3d7a52;
+            --green-light:  #e8f2ec;
+            --green-faint:  #f0f7f2;
+
+            --amber:        #c47c2a;
+            --amber-light:  #fef3e2;
+
+            --red:          #b83232;
+            --red-light:    #fdeaea;
+
+            --shadow-sm:    0 1px 3px rgba(26,20,16,0.07), 0 1px 2px rgba(26,20,16,0.05);
+            --shadow-md:    0 4px 16px rgba(26,20,16,0.10), 0 2px 6px rgba(26,20,16,0.06);
+            --shadow-lg:    0 12px 40px rgba(26,20,16,0.14), 0 4px 12px rgba(26,20,16,0.08);
+            --shadow-xl:    0 24px 64px rgba(26,20,16,0.18), 0 8px 20px rgba(26,20,16,0.10);
+
+            --radius:       10px;
+            --radius-lg:    16px;
+            --radius-xl:    22px;
+        }
+
+        .dark {
+            --bg:           #141210;
+            --bg-alt:       #1a1714;
+            --surface:      #1f1c18;
+            --surface-2:    #272320;
+            --border:       #3a342b;
+            --border-soft:  #2e2923;
+
+            --ink:          #f0ead8;
+            --ink-2:        #cfc4ae;
+            --ink-muted:    #8a7d6a;
+            --ink-faint:    #504740;
+
+            --green:        #5aaa76;
+            --green-mid:    #4a8f62;
+            --green-light:  #1a2e22;
+            --green-faint:  #131f18;
+
+            --amber:        #d4943c;
+            --amber-light:  #2a1f0e;
+
+            --red:          #e05555;
+            --red-light:    #2a1010;
+        }
+
+        * { box-sizing: border-box; }
+
+        body {
+            font-family: 'DM Sans', sans-serif;
+            background: var(--bg);
+            color: var(--ink);
+            margin: 0;
+            height: 100vh;
+            overflow: hidden;
+            /* Subtle paper grain texture */
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23noise)' opacity='0.035'/%3E%3C/svg%3E");
+        }
+
+        /* ═══════════════════════════════════════════
+           TYPOGRAPHY
+        ═══════════════════════════════════════════ */
+        .font-display { font-family: 'Playfair Display', Georgia, serif; }
+
+        /* ═══════════════════════════════════════════
+           SCROLLBARS
+        ═══════════════════════════════════════════ */
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: var(--ink-faint); }
+
+        /* ═══════════════════════════════════════════
+           APP SHELL
+        ═══════════════════════════════════════════ */
+        #app {
+            display: flex;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        /* ═══════════════════════════════════════════
+           SIDEBAR
+        ═══════════════════════════════════════════ */
+        #sidebar {
+            width: 224px;
+            min-width: 224px;
+            height: 100vh;
+            background: var(--green);
+            display: flex;
+            flex-direction: column;
+            transition: width 220ms cubic-bezier(.4,0,.2,1), min-width 220ms cubic-bezier(.4,0,.2,1);
+            overflow: hidden;
+            flex-shrink: 0;
+            z-index: 30;
+            box-shadow: 4px 0 20px rgba(0,0,0,0.12);
+        }
+
+        #sidebar.sidebar-collapsed {
+            width: 56px;
+            min-width: 56px;
+        }
+
+        #sidebar.sidebar-collapsed .sidebar-label { opacity: 0; width: 0; overflow: hidden; }
+        #sidebar.sidebar-collapsed .sidebar-logo-text { display: none; }
+        #sidebar.sidebar-collapsed .sidebar-bottom-label { display: none; }
+
+        .sidebar-label {
+            transition: opacity 150ms ease, width 150ms ease;
+            white-space: nowrap;
+            color: rgba(255,255,255,0.82);
+            font-size: 13.5px;
+            font-weight: 500;
+        }
+
+        /* Sidebar logo area */
+        .sidebar-logo {
+            padding: 18px 14px 14px;
+            border-bottom: 1px solid rgba(255,255,255,0.12);
+        }
+
+        .sidebar-logo-icon {
+            width: 32px; height: 32px;
+            background: rgba(255,255,255,0.15);
+            border: 1px solid rgba(255,255,255,0.2);
+            border-radius: 8px;
+            display: inline-flex; align-items: center; justify-content: center;
+            flex-shrink: 0;
+            cursor: pointer;
+            transition: background 150ms;
+        }
+        .sidebar-logo-icon:hover { background: rgba(255,255,255,0.22); }
+
+        .sidebar-logo-text {
+            font-family: 'Playfair Display', Georgia, serif;
+            font-size: 16px;
+            font-weight: 700;
+            color: #fff;
+            white-space: nowrap;
+            letter-spacing: -0.01em;
+        }
+
+        .sidebar-logo-sub {
+            font-size: 10px;
+            font-weight: 500;
+            color: rgba(255,255,255,0.5);
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            margin-top: 1px;
+        }
+
+        /* Sidebar section header */
+        .sidebar-section-title {
+            padding: 16px 14px 6px;
+            font-size: 9.5px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.12em;
+            color: rgba(255,255,255,0.35);
+        }
+
+        /* Sidebar nav items */
+        .sidebar-class-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 9px 12px;
+            margin: 2px 8px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background 130ms, color 130ms;
+            color: rgba(255,255,255,0.65);
+            position: relative;
+        }
+        .sidebar-class-item:hover {
+            background: rgba(255,255,255,0.1);
+            color: rgba(255,255,255,0.92);
+        }
+        .sidebar-class-item.active {
+            background: rgba(255,255,255,0.16);
+            color: #fff;
+        }
+        .sidebar-class-item.active::before {
+            content: '';
+            position: absolute;
+            left: -8px; top: 50%;
+            transform: translateY(-50%);
+            width: 3px; height: 20px;
+            background: rgba(255,255,255,0.8);
+            border-radius: 2px;
+        }
+
+        /* Sidebar class avatar badge */
+        .class-badge {
+            width: 26px; height: 26px;
+            border-radius: 6px;
+            background: rgba(255,255,255,0.12);
+            border: 1px solid rgba(255,255,255,0.18);
+            display: inline-flex; align-items: center; justify-content: center;
+            font-size: 11px;
+            font-weight: 700;
+            color: rgba(255,255,255,0.9);
+            flex-shrink: 0;
+            font-family: 'Playfair Display', serif;
+        }
+        .sidebar-class-item.active .class-badge {
+            background: rgba(255,255,255,0.22);
+        }
+
+        /* Bottom sidebar */
+        .sidebar-bottom {
+            padding: 8px;
+            border-top: 1px solid rgba(255,255,255,0.10);
+            margin-top: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 1px;
+        }
+        .sidebar-bottom-btn {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 9px 12px;
+            border-radius: 8px;
+            border: none;
+            background: transparent;
+            cursor: pointer;
+            color: rgba(255,255,255,0.55);
+            font-size: 13px;
+            font-weight: 500;
+            font-family: 'DM Sans', sans-serif;
+            transition: background 130ms, color 130ms;
+            width: 100%;
+        }
+        .sidebar-bottom-btn:hover {
+            background: rgba(255,255,255,0.10);
+            color: rgba(255,255,255,0.85);
+        }
+        .sidebar-bottom-label {
+            white-space: nowrap;
+            color: inherit;
+        }
+
+        /* Status dot */
+        .status-dot {
+            width: 7px; height: 7px;
+            border-radius: 50%;
+            background: #e05555;
+            flex-shrink: 0;
+            transition: background 300ms;
+        }
+        .status-dot.connected { background: #5ecf84; }
+
+        /* ═══════════════════════════════════════════
+           MAIN CONTENT
+        ═══════════════════════════════════════════ */
+        #mainContent {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            min-width: 0;
+            background: var(--bg);
+        }
+
+        /* ═══════════════════════════════════════════
+           TOP BAR
+        ═══════════════════════════════════════════ */
+        #topBar {
+            height: 58px;
+            min-height: 58px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 22px;
+            border-bottom: 1px solid var(--border-soft);
+            background: var(--surface);
+            flex-shrink: 0;
+            z-index: 20;
+            box-shadow: var(--shadow-sm);
+        }
+
+        /* Week navigation */
+        .week-nav-btn {
+            width: 32px; height: 32px;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            background: var(--surface);
+            color: var(--ink-2);
+            cursor: pointer;
+            display: inline-flex; align-items: center; justify-content: center;
+            transition: background 130ms, border-color 130ms, transform 100ms;
+        }
+        .week-nav-btn:hover {
+            background: var(--surface-2);
+            border-color: var(--ink-faint);
+        }
+        .week-nav-btn:active { transform: scale(0.94); }
+
+        #weekDisplay {
+            font-family: 'Playfair Display', Georgia, serif;
+            font-size: 17px;
+            font-weight: 700;
+            color: var(--ink);
+            letter-spacing: -0.02em;
+            padding: 0 10px;
+            white-space: nowrap;
+        }
+
+        /* Icon button (top bar right) */
+        .icon-btn {
+            width: 34px; height: 34px;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            background: var(--surface);
+            color: var(--ink-muted);
+            cursor: pointer;
+            display: inline-flex; align-items: center; justify-content: center;
+            transition: background 130ms, color 130ms;
+        }
+        .icon-btn:hover {
+            background: var(--surface-2);
+            color: var(--ink);
+        }
+
+        /* ═══════════════════════════════════════════
+           STATS ROW
+        ═══════════════════════════════════════════ */
+        #statsRow {
+            display: flex;
+            align-items: stretch;
+            gap: 10px;
+            padding: 10px 22px;
+            border-bottom: 1px solid var(--border-soft);
+            background: var(--surface);
+            flex-shrink: 0;
+        }
+
+        .stat-card {
+            background: var(--bg);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 8px 16px;
+            min-width: 110px;
+        }
+
+        .stat-label {
+            font-size: 10px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: var(--ink-faint);
+            display: block;
+            margin-bottom: 2px;
+        }
+
+        .stat-value {
+            font-family: 'Playfair Display', Georgia, serif;
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--ink);
+            line-height: 1.1;
+        }
+
+        .stat-value.accent { color: var(--green); }
+        .stat-value.muted  { color: var(--ink-faint); }
+
+        /* Ferienblock selector */
+        .vacation-selector {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 7px 14px;
+            border-radius: var(--radius);
+            background: var(--green-light);
+            border: 1px solid rgba(45,90,61,0.2);
+            margin-left: auto;
+        }
+        .dark .vacation-selector {
+            background: var(--green-faint);
+            border-color: rgba(90,170,118,0.2);
+        }
+
+        .vacation-selector-label {
+            font-size: 9.5px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: var(--green);
+            margin-bottom: 2px;
+            display: block;
+        }
+
+        #quickNav {
+            background: transparent;
+            border: none;
+            outline: none;
+            font-family: 'DM Sans', sans-serif;
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--green);
+            cursor: pointer;
+            min-width: 170px;
+        }
+
+        .special-day-pill {
+            font-size: 11.5px;
+            font-weight: 600;
+            color: var(--amber);
+            padding: 5px 11px;
+            border-radius: 99px;
+            background: var(--amber-light);
+            border: 1px solid rgba(196,124,42,0.25);
+            display: none;
+            white-space: nowrap;
+        }
+
+        /* Save indicator */
+        .save-indicator {
+            display: none;
+            align-items: center;
+            gap: 5px;
+            font-size: 11.5px;
+            font-weight: 600;
+            padding: 0 6px;
+            color: var(--ink-muted);
+        }
+
+        /* ═══════════════════════════════════════════
+           TABLE AREA
+        ═══════════════════════════════════════════ */
+        #tableArea {
+            flex: 1;
+            overflow: auto;
+            background: var(--bg);
+        }
+
+        /* Table */
+        .planner-table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 720px;
+        }
+
+        /* Sticky header */
+        .planner-table thead tr {
+            border-bottom: 2px solid var(--border);
+        }
+
+        .planner-table thead th {
+            background: var(--surface);
+            padding: 12px 12px 10px;
+            font-family: 'DM Sans', sans-serif;
+            font-size: 10.5px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: var(--ink-muted);
+            white-space: nowrap;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+            box-shadow: 0 1px 0 var(--border);
+        }
+
+        .planner-table thead th.day-header {
+            text-align: center;
+            border-left: 1px solid var(--border-soft);
+        }
+
+        /* Table body rows */
+        .table-row {
+            border-bottom: 1px solid var(--border-soft);
+            transition: background 120ms;
+        }
+        .table-row.group-odd  { background: var(--surface); }
+        .table-row.group-even { background: var(--bg); }
+        .table-row:hover { background: var(--surface-2) !important; }
+
+        /* Name cell */
+        .name-cell {
+            padding: 8px 14px;
+            border-right: 1px solid var(--border-soft);
+            white-space: nowrap;
+        }
+
+        /* Avatar */
+        .name-avatar {
+            width: 28px; height: 28px;
+            border-radius: 7px;
+            display: inline-flex; align-items: center; justify-content: center;
+            font-size: 10.5px;
+            font-weight: 700;
+            flex-shrink: 0;
+            color: #fff;
+            font-family: 'Playfair Display', serif;
+        }
+
+        /* Name input */
+        .name-input {
+            background: transparent;
+            border: 1px solid transparent;
+            border-radius: 6px;
+            color: var(--ink);
+            font-family: 'DM Sans', sans-serif;
+            font-size: 13.5px;
+            font-weight: 500;
+            padding: 4px 7px;
+            transition: border-color 150ms, background 150ms;
+            outline: none;
+        }
+        .name-input:hover { border-color: var(--border); background: var(--surface); }
+        .name-input:focus { border-color: var(--green-mid); background: var(--surface); box-shadow: 0 0 0 3px rgba(61,122,82,0.12); }
+        .name-input::placeholder { color: var(--ink-faint); font-weight: 400; }
+
+        /* Week cell */
+        .week-cell {
+            padding: 6px 10px;
+            text-align: center;
+            border-right: 1px solid var(--border-soft);
+        }
+
+        /* Day cell */
+        .day-cell {
+            padding: 6px 8px;
+            text-align: center;
+            border-left: 1px solid var(--border-soft);
+        }
+
+        .day-cell.clickable {
+            cursor: pointer;
+            transition: background 120ms;
+        }
+        .day-cell.clickable:hover { background: var(--green-light) !important; }
+
+        /* Closed day cell */
+        .day-cell.closed {
+            background: var(--red-light) !important;
+        }
+
+        /* Action cell */
+        .action-cell {
+            padding: 6px 10px;
+            text-align: center;
+            border-left: 1px solid var(--border-soft);
+        }
+
+        /* Row action buttons */
+        .row-action-btn {
+            width: 28px; height: 28px;
+            border-radius: 6px;
+            border: none;
+            background: transparent;
+            cursor: pointer;
+            display: inline-flex; align-items: center; justify-content: center;
+            color: var(--ink-faint);
+            transition: background 120ms, color 120ms;
+        }
+        .row-action-btn:hover { background: var(--surface-2); color: var(--ink-2); }
+        .row-action-btn.delete:hover { background: var(--red-light); color: var(--red); }
+        .row-action-btn.absent-btn.is-absent { color: var(--red); }
+        .row-action-btn.absent-btn.is-absent:hover { background: var(--red-light); color: var(--red); }
+        .table-row.row-absent { background: rgba(255, 40, 40, 0.38) !important; }
+        .table-row.row-absent .name-input { color: var(--ink-muted); }
+        .table-row.row-absent .day-cell { pointer-events: none; opacity: 0.25; }
+
+        /* New-entry row at the bottom of the table */
+        .row-new-entry td {
+            background: var(--green-light);
+            border-top: 2px dashed var(--green-mid) !important;
+        }
+        .dark .row-new-entry td {
+            background: #1c2e21;
+        }
+        .row-new-entry .name-input {
+            border-color: rgba(61,122,82,0.3);
+        }
+        .row-new-entry .name-input:focus {
+            border-color: var(--green-mid);
+            background: var(--surface);
+        }
+        .row-new-entry .name-input::placeholder { color: var(--green); font-weight: 500; }
+
+        /* ═══════════════════════════════════════════
+           CUSTOM CHECKBOX
+        ═══════════════════════════════════════════ */
+        .cb {
+            appearance: none;
+            width: 22px; height: 22px;
+            border-radius: 6px;
+            border: 1.5px solid var(--border);
+            background: var(--surface);
+            cursor: pointer;
+            transition: all 150ms ease;
+            position: relative;
+            flex-shrink: 0;
+            pointer-events: none;
+        }
+        .cb:checked {
+            background: var(--green);
+            border-color: var(--green);
+        }
+        .cb:checked::after {
+            content: '';
+            position: absolute;
+            top: 4px; left: 7px;
+            width: 5px; height: 9px;
+            border: solid #fff;
+            border-width: 0 2px 2px 0;
+            transform: rotate(45deg);
+        }
+        .cb:disabled {
+            background: var(--surface-2);
+            border-color: var(--border-soft);
+            opacity: 0.4;
+            cursor: not-allowed;
+        }
+
+        /* ═══════════════════════════════════════════
+           BUTTONS
+        ═══════════════════════════════════════════ */
+        .btn {
+            display: inline-flex; align-items: center; gap: 6px;
+            border-radius: var(--radius);
+            font-family: 'DM Sans', sans-serif;
+            font-weight: 600;
+            font-size: 13px;
+            cursor: pointer;
+            transition: all 130ms;
+            border: none;
+            padding: 8px 16px;
+        }
+        .btn:active { transform: scale(0.97); }
+
+        .btn-primary {
+            background: var(--green);
+            color: #fff;
+        }
+        .btn-primary:hover { background: var(--green-mid); }
+
+        .btn-secondary {
+            background: var(--surface);
+            color: var(--ink-2);
+            border: 1px solid var(--border);
+        }
+        .btn-secondary:hover { background: var(--surface-2); }
+
+        .btn-success {
+            background: var(--green);
+            color: #fff;
+        }
+        .btn-success:hover { background: var(--green-mid); }
+
+        .btn-danger {
+            background: var(--red);
+            color: #fff;
+        }
+        .btn-danger:hover { opacity: 0.88; }
+
+        /* ═══════════════════════════════════════════
+           SKELETON
+        ═══════════════════════════════════════════ */
+        .skeleton {
+            background: var(--surface-2);
+            border-radius: 6px;
+            overflow: hidden;
+            position: relative;
+        }
+        .skeleton::after {
+            content: '';
+            position: absolute; inset: 0;
+            transform: translateX(-100%);
+            background: linear-gradient(90deg, transparent 0, rgba(255,255,255,0.18) 50%, transparent 100%);
+            animation: shimmer 1.6s infinite;
+        }
+        .dark .skeleton::after {
+            background: linear-gradient(90deg, transparent 0, rgba(255,255,255,0.05) 50%, transparent 100%);
+        }
+        @keyframes shimmer { 100% { transform: translateX(100%); } }
+
+        /* ═══════════════════════════════════════════
+           MATRIX TEXT
+        ═══════════════════════════════════════════ */
+        .matrix-text {
+            font-family: 'Courier New', monospace;
+            font-weight: 700;
+            color: var(--green) !important;
+            letter-spacing: 2px;
+        }
+
+        /* ═══════════════════════════════════════════
+           ANIMATIONS
+        ═══════════════════════════════════════════ */
+        .fade-in { animation: fadeIn 0.28s ease-out; }
+        .slide-up { animation: slideUp 0.22s ease-out; }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(6px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(5px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* ═══════════════════════════════════════════
+           MODAL BACKDROP & CARD
+        ═══════════════════════════════════════════ */
+        .modal-backdrop {
+            position: fixed; inset: 0;
+            background: rgba(10,8,6,0.55);
+            backdrop-filter: blur(3px);
+            z-index: 50;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 16px;
+        }
+        .modal-backdrop.open {
+            display: flex;
+        }
+
+        .modal-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-xl);
+            box-shadow: var(--shadow-xl);
+        }
+
+        /* ═══════════════════════════════════════════
+           PASSWORD OVERLAY
+        ═══════════════════════════════════════════ */
+        #passwordOverlay {
+            position: fixed; inset: 0;
+            background: var(--green);
+            z-index: 100;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: opacity 0.35s ease;
+            /* Green linen texture */
+            background-image:
+                url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23noise)' opacity='0.06'/%3E%3C/svg%3E"),
+                linear-gradient(160deg, #2d5a3d 0%, #1e3d29 100%);
+        }
+
+        .unlock-card {
+            width: 100%;
+            max-width: 380px;
+            background: rgba(255,255,255,0.09);
+            border: 1px solid rgba(255,255,255,0.16);
+            border-radius: var(--radius-xl);
+            padding: 40px 36px;
+            backdrop-filter: blur(8px);
+        }
+
+        .unlock-icon {
+            width: 52px; height: 52px;
+            background: rgba(255,255,255,0.12);
+            border: 1px solid rgba(255,255,255,0.22);
+            border-radius: 14px;
+            display: flex; align-items: center; justify-content: center;
+            margin: 0 auto 20px;
+        }
+
+        .unlock-title {
+            font-family: 'Playfair Display', Georgia, serif;
+            font-size: 24px;
+            font-weight: 700;
+            color: #fff;
+            text-align: center;
+            margin-bottom: 6px;
+        }
+
+        .unlock-subtitle {
+            font-size: 13.5px;
+            color: rgba(255,255,255,0.6);
+            text-align: center;
+            margin-bottom: 28px;
+        }
+
+        .unlock-input {
+            width: 100%;
+            background: rgba(255,255,255,0.08);
+            border: 1px solid rgba(255,255,255,0.18);
+            border-radius: var(--radius);
+            color: #fff;
+            font-family: 'DM Sans', sans-serif;
+            font-size: 14px;
+            padding: 12px 16px;
+            outline: none;
+            transition: border-color 150ms, background 150ms;
+            margin-bottom: 10px;
+        }
+        .unlock-input::placeholder { color: rgba(255,255,255,0.35); }
+        .unlock-input:focus {
+            border-color: rgba(255,255,255,0.45);
+            background: rgba(255,255,255,0.12);
+        }
+
+        .unlock-btn {
+            width: 100%;
+            padding: 12px;
+            background: #fff;
+            color: var(--green);
+            font-family: 'DM Sans', sans-serif;
+            font-size: 14px;
+            font-weight: 700;
+            border: none;
+            border-radius: var(--radius);
+            cursor: pointer;
+            transition: opacity 150ms;
+            margin-top: 4px;
+        }
+        .unlock-btn:hover { opacity: 0.92; }
+
+        .unlock-error {
+            font-size: 12px;
+            color: rgba(255,160,140,0.95);
+            text-align: center;
+            margin-top: 8px;
+            display: none;
+        }
+
+        .unlock-reset {
+            width: 100%;
+            padding: 10px;
+            background: transparent;
+            color: rgba(255,255,255,0.4);
+            font-family: 'DM Sans', sans-serif;
+            font-size: 12.5px;
+            font-weight: 500;
+            border: none;
+            border-top: 1px solid rgba(255,255,255,0.10);
+            cursor: pointer;
+            transition: color 150ms;
+            margin-top: 16px;
+        }
+        .unlock-reset:hover { color: rgba(255,255,255,0.7); }
+
+        /* Decorative dots on overlay */
+        .overlay-dots {
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            pointer-events: none;
+            overflow: hidden;
+        }
+        .overlay-dots::before,
+        .overlay-dots::after {
+            content: '';
+            position: absolute;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.04);
+        }
+        .overlay-dots::before {
+            width: 480px; height: 480px;
+            top: -120px; right: -120px;
+        }
+        .overlay-dots::after {
+            width: 320px; height: 320px;
+            bottom: -80px; left: -80px;
+        }
+
+        /* ═══════════════════════════════════════════
+           MODAL: EINSTELLUNGEN (SONDERTAGE)
+        ═══════════════════════════════════════════ */
+        #specialDaysModal.open { display: flex; }
+
+        .modal-header {
+            padding: 24px 28px 20px;
+            border-bottom: 1px solid var(--border-soft);
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+        }
+
+        .modal-title {
+            font-family: 'Playfair Display', Georgia, serif;
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--ink);
+            margin-bottom: 3px;
+        }
+
+        .modal-subtitle {
+            font-size: 12.5px;
+            color: var(--ink-muted);
+        }
+
+        .modal-close {
+            width: 32px; height: 32px;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            background: transparent;
+            color: var(--ink-muted);
+            cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+            transition: background 130ms;
+        }
+        .modal-close:hover { background: var(--surface-2); }
+
+        /* Form sections */
+        .form-section {
+            background: var(--bg);
+            border: 1px solid var(--border-soft);
+            border-radius: var(--radius-lg);
+            padding: 20px 22px;
+            margin-bottom: 16px;
+        }
+
+        .form-section-title {
+            font-size: 12px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.09em;
+            color: var(--ink-muted);
+            margin-bottom: 16px;
+        }
+
+        .form-label {
+            display: block;
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--ink-2);
+            margin-bottom: 6px;
+        }
+
+        .form-input {
+            width: 100%;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            color: var(--ink);
+            font-family: 'DM Sans', sans-serif;
+            font-size: 13.5px;
+            padding: 9px 13px;
+            outline: none;
+            transition: border-color 150ms, box-shadow 150ms;
+        }
+        .form-input:focus {
+            border-color: var(--green-mid);
+            box-shadow: 0 0 0 3px rgba(61,122,82,0.10);
+        }
+        .form-input option { background: var(--surface); color: var(--ink); }
+
+        /* Special day list items */
+        .special-day-item {
+            background: var(--surface);
+            border: 1px solid var(--border-soft);
+            border-radius: var(--radius-lg);
+            padding: 16px 18px;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 12px;
+        }
+
+        .badge {
+            display: inline-block;
+            font-size: 9.5px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.09em;
+            padding: 3px 8px;
+            border-radius: 5px;
+        }
+        .badge-vacation { background: var(--green-light); color: var(--green); }
+        .badge-closed   { background: var(--red-light); color: var(--red); }
+
+        /* ═══════════════════════════════════════════
+           MODAL: ÜBERSICHT
+        ═══════════════════════════════════════════ */
+        #overviewModal.open { display: flex; }
+
+        .tab-bar {
+            display: flex;
+            gap: 2px;
+            padding: 16px 22px 0;
+            border-bottom: 1px solid var(--border-soft);
+            background: var(--bg);
+            flex-shrink: 0;
+        }
+
+        .tab-btn {
+            padding: 9px 18px 11px;
+            border-radius: 8px 8px 0 0;
+            border: 1px solid transparent;
+            background: transparent;
+            font-family: 'DM Sans', sans-serif;
+            font-size: 12.5px;
+            font-weight: 600;
+            color: var(--ink-muted);
+            cursor: pointer;
+            transition: all 130ms;
+            position: relative;
+            bottom: -1px;
+        }
+        .tab-btn.active {
+            background: var(--surface);
+            border-color: var(--border-soft);
+            border-bottom-color: var(--surface);
+            color: var(--green);
+        }
+        .tab-btn:not(.active):hover {
+            background: var(--surface-2);
+            color: var(--ink-2);
+        }
+
+        /* Overview table */
+        .overview-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13px;
+        }
+        .overview-table thead tr {
+            border-bottom: 2px solid var(--border);
+        }
+        .overview-table thead th {
+            padding: 10px 16px;
+            text-align: left;
+            font-size: 10px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: var(--ink-muted);
+            background: var(--bg);
+            position: sticky; top: 0;
+        }
+        .overview-table tbody tr {
+            border-bottom: 1px solid var(--border-soft);
+            transition: background 100ms;
+        }
+        .overview-table tbody tr:hover { background: var(--surface-2); }
+        .overview-table td {
+            padding: 9px 16px;
+            color: var(--ink-2);
+        }
+        #sortNamesHeader {
+            cursor: pointer;
+            user-select: none;
+        }
+        #sortNamesHeader:hover { color: var(--ink); }
+        #sortNamesHeader .sort-indicator {
+            display: inline-block;
+            margin-left: 5px;
+            opacity: 0.35;
+            font-size: 10px;
+            font-style: normal;
+        }
+        #sortNamesHeader.sort-asc .sort-indicator,
+        #sortNamesHeader.sort-desc .sort-indicator {
+            opacity: 1;
+            color: var(--green);
+        }
+        .overview-table thead th.sortable {
+            cursor: pointer;
+            user-select: none;
+        }
+        .overview-table thead th.sortable:hover { color: var(--ink); }
+        .sort-indicator {
+            display: inline-block;
+            margin-left: 4px;
+            opacity: 0.35;
+            font-style: normal;
+            font-size: 10px;
+        }
+        .overview-table thead th.sort-asc .sort-indicator,
+        .overview-table thead th.sort-desc .sort-indicator {
+            opacity: 1;
+            color: var(--green);
+        }
+
+        /* ═══════════════════════════════════════════
+           FLOATING BUTTON
+        ═══════════════════════════════════════════ */
+        #scrollToTopBtn {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            z-index: 40;
+            width: 40px; height: 40px;
+            border-radius: 50%;
+            background: var(--green);
+            color: #fff;
+            border: none;
+            cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+            box-shadow: var(--shadow-md);
+            opacity: 0;
+            transform: translateY(8px);
+            transition: opacity 200ms, transform 200ms;
+            pointer-events: none;
+        }
+        #scrollToTopBtn.visible {
+            opacity: 1;
+            transform: translateY(0);
+            pointer-events: auto;
+        }
+        #scrollToTopBtn:hover { background: var(--green-mid); }
+
+        /* ═══════════════════════════════════════════
+           RESPONSIVE
+        ═══════════════════════════════════════════ */
+        @media (max-width: 680px) {
+            #sidebar { display: none; }
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- ═══════════════════════════════════ -->
+    <!--  PASSWORD OVERLAY                  -->
+    <!-- ═══════════════════════════════════ -->
+    <div id="passwordOverlay">
+        <div class="overlay-dots"></div>
+        <div class="unlock-card slide-up">
+            <div class="unlock-icon">
+                <svg width="22" height="22" fill="none" stroke="white" viewBox="0 0 24 24" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
+                </svg>
+            </div>
+            <h2 class="unlock-title">Ferienplaner</h2>
+            <p class="unlock-subtitle">Passwort eingeben, um fortzufahren</p>
+            <form id="passwordForm">
+                <input type="password" id="appPassword" class="unlock-input" placeholder="Passwort…" required autocomplete="current-password">
+                <p id="passwordError" class="unlock-error">Falsches Passwort oder Verbindungsfehler</p>
+                <button type="submit" class="unlock-btn">Entsperren</button>
+            </form>
+            <button type="button" id="resetDbBtn" class="unlock-reset">Passwort vergessen? (Datenbank zurücksetzen)</button>
+        </div>
+    </div>
+
+    <!-- ═══════════════════════════════════ -->
+    <!--  APP SHELL                         -->
+    <!-- ═══════════════════════════════════ -->
+    <div id="app">
+
+        <!-- SIDEBAR -->
+        <aside id="sidebar">
+            <!-- Logo -->
+            <div class="sidebar-logo" style="display:flex;align-items:center;gap:10px;">
+                <div class="sidebar-logo-icon" data-action="toggle-sidebar">
+                    <svg width="15" height="15" fill="none" stroke="white" viewBox="0 0 24 24" stroke-width="2.5">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16"/>
+                    </svg>
+                </div>
+                <div class="sidebar-logo-text">
+                    <div class="sidebar-logo-text">Ferienplaner</div>
+                    <div class="sidebar-logo-sub">Anwesenheit</div>
+                </div>
+            </div>
+
+            <!-- Classes nav -->
+            <nav style="flex:1;padding-top:4px;overflow:hidden;">
+                <div class="sidebar-section-title sidebar-label" style="color:rgba(255,255,255,0.35);">Klassen</div>
+                <div class="sidebar-class-item active" data-class="class1">
+                    <div class="class-badge">1</div>
+                    <span class="sidebar-label">Klasse 1</span>
+                </div>
+                <div class="sidebar-class-item" data-class="class2">
+                    <div class="class-badge">2</div>
+                    <span class="sidebar-label">Klasse 2</span>
+                </div>
+                <div class="sidebar-class-item" data-class="class3">
+                    <div class="class-badge">3</div>
+                    <span class="sidebar-label">Klasse 3</span>
+                </div>
+                <div class="sidebar-class-item" data-class="class4">
+                    <div class="class-badge">4</div>
+                    <span class="sidebar-label">Klasse 4</span>
+                </div>
+            </nav>
+
+            <!-- Bottom -->
+            <div class="sidebar-bottom">
+                <!-- Save indicator -->
+                <div id="saveIndicator" class="save-indicator" style="padding:6px 12px;">
+                    <svg id="saveSpinner" class="animate-spin" width="13" height="13" fill="none" stroke="rgba(255,255,255,0.7)" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+                    </svg>
+                    <svg id="saveCheck" width="13" height="13" fill="none" stroke="rgba(94,207,132,0.9)" viewBox="0 0 24 24" style="display:none;">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/>
+                    </svg>
+                    <span id="saveText" class="sidebar-bottom-label" style="font-size:12px;color:rgba(255,255,255,0.6);">Speichert…</span>
+                </div>
+
+                <!-- Settings -->
+                <button id="manageDaysBtn" class="sidebar-bottom-btn">
+                    <svg width="15" height="15" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" style="flex-shrink:0;opacity:0.7">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
+                        <circle cx="12" cy="12" r="3"/>
+                    </svg>
+                    <span class="sidebar-bottom-label">Einstellungen</span>
+                </button>
+
+                <!-- Connection status -->
+                <div style="display:flex;align-items:center;gap:8px;padding:8px 12px;">
+                    <div id="statusDot" class="status-dot"></div>
+                    <span id="statusText" class="sidebar-bottom-label" style="font-size:11.5px;color:rgba(255,255,255,0.4);">Offline</span>
+                </div>
+            </div>
+        </aside>
+
+        <!-- MAIN CONTENT -->
+        <main id="mainContent">
+
+            <!-- TOP BAR -->
+            <div id="topBar">
+                <div style="display:flex;align-items:center;gap:8px;">
+                    <button id="prevWeek" class="week-nav-btn" title="Vorherige Woche">
+                        <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/>
+                        </svg>
+                    </button>
+                    <span id="weekDisplay">…</span>
+                    <button id="nextWeek" class="week-nav-btn" title="Nächste Woche">
+                        <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/>
+                        </svg>
+                    </button>
+                </div>
+                <div style="display:flex;align-items:center;gap:7px;">
+                    <button id="overviewBtn" class="icon-btn" title="Übersicht anzeigen">
+                        <svg width="15" height="15" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                        </svg>
+                    </button>
+                    <button id="exportCsvBtn" class="icon-btn" title="Als Excel exportieren">
+                        <svg width="15" height="15" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                        </svg>
+                    </button>
+                    <button id="themeToggle" class="icon-btn" title="Hell/Dunkel umschalten">
+                        <svg id="themeIconLight" width="15" height="15" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"/>
+                        </svg>
+                        <svg id="themeIconDark" width="15" height="15" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" style="display:none;">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"/>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+
+            <!-- STATS ROW -->
+            <div id="statsRow">
+                <div class="stat-card">
+                    <span class="stat-label">Kinder</span>
+                    <span class="stat-value" id="statStudents">—</span>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-label">Angemeldet</span>
+                    <span class="stat-value accent" id="statPresent">—</span>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-label">Nicht angemeldet</span>
+                    <span class="stat-value muted" id="statAbsent">—</span>
+                </div>
+
+                <!-- Ferienblock picker -->
+                <div class="vacation-selector">
+                    <svg width="14" height="14" fill="none" stroke="var(--green)" viewBox="0 0 24 24" stroke-width="2" style="flex-shrink:0;">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                    </svg>
+                    <div>
+                        <span class="vacation-selector-label">Ferienblock</span>
+                        <select id="quickNav">
+                            <option value="">Zeitraum wählen…</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div id="currentSpecialDay" class="special-day-pill"></div>
+            </div>
+
+            <!-- TABLE AREA -->
+            <div id="tableArea">
+                <table class="planner-table">
+                    <thead>
+                        <tr>
+                            <th id="sortNamesHeader" style="text-align:left;padding-left:16px;width:200px;" title="Nach Name sortieren">
+                                Name <span class="sort-indicator">⇅</span>
+                            </th>
+                            <th style="text-align:center;border-left:1px solid var(--border-soft);">Woche</th>
+                            <th class="day-header" data-day="0">Mo</th>
+                            <th class="day-header" data-day="1">Di</th>
+                            <th class="day-header" data-day="2">Mi</th>
+                            <th class="day-header" data-day="3">Do</th>
+                            <th class="day-header" data-day="4">Fr</th>
+                            <th style="text-align:center;border-left:1px solid var(--border-soft);">Aktion</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tableBody"></tbody>
+                </table>
+            </div>
+
+        </main>
+    </div>
+
+    <!-- Hidden classSelect for JS compatibility -->
+    <select id="classSelect" style="display:none;">
+        <option value="class1">Klasse 1</option>
+        <option value="class2">Klasse 2</option>
+        <option value="class3">Klasse 3</option>
+        <option value="class4">Klasse 4</option>
+    </select>
+
+    <!-- Scroll-to-top button -->
+    <button id="scrollToTopBtn" title="Nach oben">
+        <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M5 10l7-7m0 0l7 7m-7-7v18"/>
+        </svg>
+    </button>
+
+    <!-- ═══════════════════════════════════════════════════════ -->
+    <!--  MODAL: EINSTELLUNGEN (SONDERTAGE)                     -->
+    <!-- ═══════════════════════════════════════════════════════ -->
+    <div id="specialDaysModal" class="modal-backdrop">
+        <div class="modal-card fade-in" style="max-width:680px;width:100%;max-height:90vh;overflow-y:auto;">
+            <div class="modal-header">
+                <div>
+                    <div class="modal-title">Einstellungen</div>
+                    <div class="modal-subtitle">Ferienblöcke und Sondertage verwalten</div>
+                </div>
+                <button id="closeModal" class="modal-close">
+                    <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
+                    </svg>
+                </button>
+            </div>
+
+            <div style="padding:22px 28px;">
+                <!-- Add form -->
+                <form id="specialDayForm" class="form-section" style="margin-bottom:24px;">
+                    <div class="form-section-title">Neuen Zeitraum hinzufügen</div>
+                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
+                        <div>
+                            <label class="form-label">Name</label>
+                            <input type="text" id="specialDayName" class="form-input" required placeholder="z.B. Sommerferien">
+                        </div>
+                        <div>
+                            <label class="form-label">Typ</label>
+                            <select id="specialDayType" class="form-input">
+                                <option value="vacation">Ferien</option>
+                                <option value="closed">Geschlossen (Feiertag)</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="form-label">Startdatum</label>
+                            <input type="date" id="specialDayStart" class="form-input" required>
+                        </div>
+                        <div>
+                            <label class="form-label">Enddatum</label>
+                            <input type="date" id="specialDayEnd" class="form-input" required>
+                        </div>
+                    </div>
+
+                    <div style="margin-top:16px;background:var(--surface);border:1px solid var(--border-soft);border-radius:var(--radius);padding:14px 16px;">
+                        <div class="form-section-title" style="margin-bottom:12px;">Einzelner Feiertag im Zeitraum (optional)</div>
+                        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+                            <div>
+                                <label class="form-label">Name des Feiertags</label>
+                                <input type="text" id="holidayName" class="form-input" placeholder="z.B. Ostermontag">
+                            </div>
+                            <div>
+                                <label class="form-label">Datum</label>
+                                <input type="date" id="holidayDate" class="form-input">
+                            </div>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary" style="margin-top:14px;">
+                        <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/>
+                        </svg>
+                        Zeitraum speichern
+                    </button>
+                </form>
+
+                <!-- List -->
+                <div>
+                    <div class="form-section-title" style="margin-bottom:12px;display:flex;align-items:center;gap:6px;">
+                        <svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" style="color:var(--green)">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 002-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/>
+                        </svg>
+                        Bestehende Sondertage
+                    </div>
+                    <div id="specialDaysList"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════════════════════ -->
+    <!--  MODAL: ÜBERSICHT / AUSWERTUNG                        -->
+    <!-- ═══════════════════════════════════════════════════════ -->
+    <div id="overviewModal" class="modal-backdrop">
+        <div class="modal-card fade-in" style="max-width:860px;width:100%;height:88vh;display:flex;flex-direction:column;overflow:hidden;">
+
+            <!-- Header -->
+            <div class="modal-header" style="flex-shrink:0;">
+                <div>
+                    <div class="modal-title">Ansicht &amp; Auswertung</div>
+                    <div class="modal-subtitle" id="overviewModalSubtitle">Aktueller Zeitraum</div>
+                </div>
+                <button id="closeOverviewBtn" class="modal-close">
+                    <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
+                    </svg>
+                </button>
+            </div>
+
+            <!-- Tabs -->
+            <div class="tab-bar">
+                <button id="tabListBtn" class="tab-btn active">Namensliste</button>
+                <button id="tabSummaryBtn" class="tab-btn">Tageszusammenfassung</button>
+            </div>
+
+            <!-- Tab: List -->
+            <div id="tabContentList" style="flex:1;overflow-y:auto;background:var(--bg);">
+                <table class="overview-table" id="overviewListTable">
+                    <thead>
+                        <tr>
+                            <th class="sortable" data-sort="className">Klasse <span class="sort-indicator">⇅</span></th>
+                            <th class="sortable" data-sort="vorname">Vorname <span class="sort-indicator">⇅</span></th>
+                            <th class="sortable" data-sort="nachname">Nachname <span class="sort-indicator">⇅</span></th>
+                            <th class="sortable" data-sort="dateObj">Datum <span class="sort-indicator">⇅</span></th>
+                        </tr>
+                    </thead>
+                    <tbody id="overviewListBody"></tbody>
+                </table>
+                <div id="overviewListEmpty" style="display:none;text-align:center;padding:48px 20px;color:var(--ink-muted);">
+                    <svg width="40" height="40" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5" style="margin:0 auto 12px;display:block;opacity:0.3">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+                    </svg>
+                    <p style="font-size:13.5px;font-weight:500;">Noch keine Anwesenheiten für diesen Zeitraum.</p>
+                </div>
+            </div>
+
+            <!-- Tab: Summary -->
+            <div id="tabContentSummary" style="display:none;flex:1;overflow-y:auto;background:var(--bg);">
+                <table class="overview-table">
+                    <thead>
+                        <tr>
+                            <th style="width:55%">Datum</th>
+                            <th>Anmeldungen gesamt</th>
+                        </tr>
+                    </thead>
+                    <tbody id="overviewSummaryBody"></tbody>
+                </table>
+            </div>
+
+            <!-- Footer -->
+            <div style="padding:16px 22px;border-top:1px solid var(--border-soft);flex-shrink:0;display:flex;justify-content:flex-end;background:var(--surface);">
+                <button id="overviewExportBtn" class="btn btn-success" style="padding:10px 22px;font-size:13.5px;">
+                    <svg width="15" height="15" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                    </svg>
+                    Als Excel herunterladen
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <input type="file" id="importFile" style="display:none;" accept=".json">
+
+    <!-- ═══════════════════════════════════════════════════════ -->
+    <!--  JAVASCRIPT                                            -->
+    <!-- ═══════════════════════════════════════════════════════ -->
+    <script>
+        class WeekPlanner {
+            constructor() {
+                this.currentWeek = new Date();
+                this.setToMonday(this.currentWeek);
+
+                this.viewMode = 'week';
+                this.currentHolidayId = null;
+                this.currentClass = 'class1';
+                this.data = this.getInitialData();
+                this.specialDays = [];
+                this.encryptionKey = null;
+                this.isDBConnected = false;
+                this.isDataLoaded = false;
+                this.isDecrypting = false;
+                this.isDecryptedOnce = false;
+                this._lastRenderKey = null;
+                this.overviewListSortCol = 'className';
+                this.overviewListSortDir = 'asc';
+
+                this.initializeTheme();
+                this.bindEvents();
+                this.setupFirebaseListener();
+                this.render();
+            }
+
+            setupFirebaseListener() {
+                if (window.firebaseDB) {
+                    this.initFirebaseDB();
+                } else {
+                    window.addEventListener('firebase_loaded', () => this.initFirebaseDB());
+                }
+            }
+
+            initFirebaseDB() {
+                const connectedRef = window.firebaseRef(window.firebaseDB, '.info/connected');
+                window.firebaseOnValue(connectedRef, (snap) => {
+                    const dot  = document.getElementById('statusDot');
+                    const text = document.getElementById('statusText');
+                    if (snap.val() === true) {
+                        this.isDBConnected = true;
+                        if (dot)  { dot.classList.add('connected'); }
+                        if (text) { text.textContent = 'Verbunden'; text.style.color = 'rgba(94,207,132,0.8)'; }
+                    } else {
+                        this.isDBConnected = false;
+                        if (dot)  { dot.classList.remove('connected'); }
+                        if (text) { text.textContent = 'Offline'; text.style.color = 'rgba(255,255,255,0.4)'; }
+                    }
+                });
+            }
+
+            // ── Encryption ──────────────────────────────────────────
+            encryptData(data) {
+                if (!this.encryptionKey) return null;
+                try { return CryptoJS.AES.encrypt(JSON.stringify(data), this.encryptionKey).toString(); }
+                catch (e) { console.error('Encryption failed', e); return null; }
+            }
+
+            decryptData(ciphertext) {
+                if (!this.encryptionKey || !ciphertext) return null;
+                try {
+                    const bytes = CryptoJS.AES.decrypt(ciphertext, this.encryptionKey);
+                    return JSON.parse(bytes.toString(CryptoJS.enc.Utf8));
+                } catch (e) { return null; }
+            }
+
+            // ── Unlock ───────────────────────────────────────────────
+            unlockApp(password) {
+                this.encryptionKey = password;
+                const dataRef = window.firebaseRef(window.firebaseDB, '/');
+
+                window.firebaseOnValue(dataRef, (snapshot) => {
+                    const val = snapshot.val();
+                    const errorEl  = document.getElementById('passwordError');
+                    const overlay  = document.getElementById('passwordOverlay');
+
+                    if (!val) {
+                        this.saveData('specialDays', this.specialDays);
+                        Object.keys(this.data).forEach(k => this.saveData(`klassen/${k}`, this.data[k]));
+                        overlay.style.opacity = '0';
+                        setTimeout(() => overlay.style.display = 'none', 350);
+                        this.render(true);
+                        return;
+                    }
+
+                    if (val.specialDays) {
+                        const decSD = this.decryptData(val.specialDays);
+                        if (!decSD) {
+                            errorEl.style.display = 'block';
+                            this.encryptionKey = null;
+                            return;
+                        }
+                        errorEl.style.display = 'none';
+                        overlay.style.opacity = '0';
+                        setTimeout(() => overlay.style.display = 'none', 350);
+
+                        this.specialDays = decSD;
+                        if (val.klassen) {
+                            Object.keys(val.klassen).forEach(k => {
+                                const dec = this.decryptData(val.klassen[k]);
+                                if (dec) this.data[k] = dec;
+                            });
+                        }
+                        this.isDataLoaded = true;
+
+                        if (!this.isDecryptedOnce) { this.isDecrypting = true; this.isDecryptedOnce = true; }
+                        else                         { this.isDecrypting = false; }
+
+                        this._lastRenderKey = null;
+                        this.updateQuickNav();
+                        this.render(true);
+
+                        if (this.isDecrypting) setTimeout(() => { this.isDecrypting = false; }, 1600);
+                    }
+                }, (error) => {
+                    const errorEl = document.getElementById('passwordError');
+                    if (errorEl) { errorEl.textContent = 'Verbindungsfehler: ' + error.message; errorEl.style.display = 'block'; }
+                });
+            }
+
+            // ── Save ─────────────────────────────────────────────────
+            saveData(path, dataObj) {
+                if (!this.encryptionKey || !this.isDBConnected) return;
+                this.showSaveIndicator('saving');
+                const enc = this.encryptData(dataObj);
+                if (enc) {
+                    window.firebaseSet(window.firebaseRef(window.firebaseDB, path), enc)
+                        .then(() => this.showSaveIndicator('saved'))
+                        .catch(() => this.showSaveIndicator('error'));
+                }
+            }
+
+            showSaveIndicator(state) {
+                const el      = document.getElementById('saveIndicator');
+                const spinner = document.getElementById('saveSpinner');
+                const check   = document.getElementById('saveCheck');
+                const text    = document.getElementById('saveText');
+                if (!el) return;
+
+                el.style.display = 'flex';
+                if (state === 'saving') {
+                    spinner.style.display = ''; check.style.display = 'none';
+                    text.textContent = 'Speichert…'; text.style.color = 'rgba(255,255,255,0.6)';
+                } else if (state === 'saved') {
+                    spinner.style.display = 'none'; check.style.display = '';
+                    text.textContent = 'Gespeichert'; text.style.color = 'rgba(94,207,132,0.9)';
+                    setTimeout(() => {
+                        el.style.opacity = '0';
+                        el.style.transition = 'opacity 300ms';
+                        setTimeout(() => { el.style.display = 'none'; el.style.opacity = ''; el.style.transition = ''; }, 300);
+                    }, 2000);
+                } else {
+                    spinner.style.display = 'none'; check.style.display = 'none';
+                    text.textContent = 'Fehler!'; text.style.color = 'rgba(240,100,100,0.9)';
+                }
+            }
+
+            get people()     { return this.data[this.currentClass].people; }
+            get attendance() { return this.data[this.currentClass].attendance; }
+
+            getInitialData() {
+                return {
+                    class1: { people: [], attendance: {}, absentPersons: {} },
+                    class2: { people: [], attendance: {}, absentPersons: {} },
+                    class3: { people: [], attendance: {}, absentPersons: {} },
+                    class4: { people: [], attendance: {}, absentPersons: {} },
+                };
+            }
+
+            setToMonday(date) {
+                const day = date.getDay();
+                const diff = day === 0 ? -6 : 1 - day;
+                date.setDate(date.getDate() + diff);
+            }
+
+            formatDate(date) { return date.toISOString().split('T')[0]; }
+
+            formatDisplayDate(date) {
+                return date.toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', year: 'numeric' });
+            }
+
+            getWeekDates(monday) {
+                const dates = [];
+                for (let i = 0; i < 5; i++) {
+                    const d = new Date(monday || this.currentWeek);
+                    d.setDate(d.getDate() + i);
+                    dates.push(d);
+                }
+                return dates;
+            }
+
+            initializeTheme() {
+                const saved = localStorage.getItem('weekPlanner_theme');
+                const prefers = window.matchMedia('(prefers-color-scheme: dark)').matches;
+                const isDark = saved === 'dark' || (!saved && prefers);
+                document.documentElement.classList.toggle('dark', isDark);
+                this.updateThemeIcons(isDark);
+            }
+
+            updateThemeIcons(isDark) {
+                const light = document.getElementById('themeIconLight');
+                const dark  = document.getElementById('themeIconDark');
+                if (light) light.style.display = isDark ? 'none' : '';
+                if (dark)  dark.style.display  = isDark ? '' : 'none';
+            }
+
+            bindEvents() {
+                document.getElementById('passwordForm').addEventListener('submit', (e) => {
+                    e.preventDefault();
+                    const pwd = document.getElementById('appPassword').value;
+                    if (pwd) this.unlockApp(pwd);
+                });
+
+                document.getElementById('resetDbBtn').addEventListener('click', () => {
+                    if (confirm('WARNUNG: Möchten Sie die Datenbank wirklich unwiderruflich löschen? Alle bisherigen Daten gehen dabei sofort verloren!')) {
+                        if (confirm('Sind Sie sich absolut sicher? Dies kann NICHT rückgängig gemacht werden.')) {
+                            window.firebaseSet(window.firebaseRef(window.firebaseDB, '/'), null)
+                                .then(() => { alert('Datenbank gelöscht. Die Seite wird neu geladen.'); window.location.reload(); })
+                                .catch(err => alert('Fehler: ' + err.message));
+                        }
+                    }
+                });
+
+                document.getElementById('themeToggle').addEventListener('click', () => {
+                    const isDark = document.documentElement.classList.toggle('dark');
+                    localStorage.setItem('weekPlanner_theme', isDark ? 'dark' : 'light');
+                    this.updateThemeIcons(isDark);
+                });
+
+                document.getElementById('prevWeek').addEventListener('click', () => {
+                    this.viewMode = 'week'; this.currentHolidayId = null;
+                    this.currentWeek.setDate(this.currentWeek.getDate() - 7);
+                    document.getElementById('quickNav').value = '';
+                    this.render();
+                });
+                document.getElementById('nextWeek').addEventListener('click', () => {
+                    this.viewMode = 'week'; this.currentHolidayId = null;
+                    this.currentWeek.setDate(this.currentWeek.getDate() + 7);
+                    document.getElementById('quickNav').value = '';
+                    this.render();
+                });
+
+                document.getElementById('classSelect').addEventListener('change', (e) => {
+                    this.currentClass = e.target.value; this.render();
+                });
+
+                document.getElementById('quickNav').addEventListener('change', (e) => {
+                    if (e.target.value) {
+                        const sd = this.specialDays.find(d => d.id === e.target.value);
+                        if (sd) {
+                            this.viewMode = 'holiday'; this.currentHolidayId = e.target.value;
+                            this.currentWeek = new Date(sd.startDate); this.setToMonday(this.currentWeek);
+                            this.render();
+                        }
+                    }
+                });
+
+                // Sort main name list by clicking the Name header
+                document.getElementById('sortNamesHeader').addEventListener('click', () => {
+                    const header = document.getElementById('sortNamesHeader');
+                    const indicator = header.querySelector('.sort-indicator');
+                    if (header.classList.contains('sort-asc')) {
+                        // Switch to descending
+                        header.classList.replace('sort-asc', 'sort-desc');
+                        indicator.textContent = '↓';
+                        this.people.sort((a, b) => b.name.trim().localeCompare(a.name.trim(), 'de'));
+                    } else {
+                        // Ascending (first click or from desc)
+                        header.classList.remove('sort-desc');
+                        header.classList.add('sort-asc');
+                        indicator.textContent = '↑';
+                        this.people.sort((a, b) => a.name.trim().localeCompare(b.name.trim(), 'de'));
+                    }
+                    this.saveData(`klassen/${this.currentClass}`, this.data[this.currentClass]);
+                    this.renderTable(true);
+                });
+
+                // Overview modal
+                document.getElementById('overviewBtn').addEventListener('click', () => this.showOverviewModal());
+                document.getElementById('closeOverviewBtn').addEventListener('click', () => this.hideOverviewModal());
+                document.getElementById('overviewModal').addEventListener('click', (e) => {
+                    if (e.target === e.currentTarget) this.hideOverviewModal();
+                });
+
+                // Tabs
+                document.getElementById('tabListBtn').addEventListener('click', () => {
+                    document.getElementById('tabContentList').style.display   = '';
+                    document.getElementById('tabContentSummary').style.display = 'none';
+                    document.getElementById('tabListBtn').classList.add('active');
+                    document.getElementById('tabSummaryBtn').classList.remove('active');
+                });
+                document.getElementById('tabSummaryBtn').addEventListener('click', () => {
+                    document.getElementById('tabContentSummary').style.display = '';
+                    document.getElementById('tabContentList').style.display    = 'none';
+                    document.getElementById('tabSummaryBtn').classList.add('active');
+                    document.getElementById('tabListBtn').classList.remove('active');
+                });
+
+                document.getElementById('exportCsvBtn').addEventListener('click', () => this.exportToExcel());
+                document.getElementById('overviewExportBtn').addEventListener('click', () => { this.exportToExcel(); this.hideOverviewModal(); });
+
+                // Overview list table: sortable column headers
+                document.querySelectorAll('#overviewListTable th.sortable').forEach(th => {
+                    th.addEventListener('click', () => {
+                        const col = th.dataset.sort;
+                        if (this.overviewListSortCol === col) {
+                            this.overviewListSortDir = this.overviewListSortDir === 'asc' ? 'desc' : 'asc';
+                        } else {
+                            this.overviewListSortCol = col;
+                            this.overviewListSortDir = 'asc';
+                        }
+                        this.renderOverviewData();
+                    });
+                });
+
+                // Sidebar toggle
+                document.addEventListener('click', (e) => {
+                    if (e.target.closest('[data-action="toggle-sidebar"]')) {
+                        document.getElementById('sidebar').classList.toggle('sidebar-collapsed');
+                    }
+                });
+
+                // Sidebar class switcher
+                document.querySelectorAll('.sidebar-class-item').forEach(item => {
+                    item.addEventListener('click', () => {
+                        document.querySelectorAll('.sidebar-class-item').forEach(i => i.classList.remove('active'));
+                        item.classList.add('active');
+                        const cls = item.dataset.class;
+                        document.getElementById('classSelect').value = cls;
+                        this.currentClass = cls;
+                        this._lastRenderKey = null;
+                        this.render(true);
+                    });
+                });
+
+                // Settings modal
+                document.getElementById('manageDaysBtn').addEventListener('click', () => this.showSpecialDaysModal());
+                document.getElementById('closeModal').addEventListener('click', () => this.hideSpecialDaysModal());
+                document.getElementById('specialDayForm').addEventListener('submit', (e) => { e.preventDefault(); this.addSpecialDay(); });
+                document.getElementById('specialDaysModal').addEventListener('click', (e) => {
+                    if (e.target === e.currentTarget) this.hideSpecialDaysModal();
+                });
+
+                // Scroll to top
+                const tableArea  = document.getElementById('tableArea');
+                const scrollBtn  = document.getElementById('scrollToTopBtn');
+                tableArea.addEventListener('scroll', () => {
+                    scrollBtn.classList.toggle('visible', tableArea.scrollTop > 200);
+                });
+                scrollBtn.addEventListener('click', () => tableArea.scrollTo({ top: 0, behavior: 'smooth' }));
+
+                // Table event delegation
+                const tbody = document.getElementById('tableBody');
+                tbody.addEventListener('change', (e) => {
+                    const cb = e.target.closest('[data-action="toggle-attendance"]');
+                    if (cb) {
+                        this.attendance[cb.dataset.attendanceKey] = cb.checked;
+                        this.saveData(`klassen/${this.currentClass}`, this.data[this.currentClass]);
+                    }
+                });
+                tbody.addEventListener('click', (e) => {
+                    const cell = e.target.closest('[data-action="cell-click"]');
+                    if (cell) {
+                        const cb = cell.querySelector('[data-action="toggle-attendance"]');
+                        if (cb && e.target !== cb) { cb.checked = !cb.checked; cb.dispatchEvent(new Event('change')); }
+                    }
+                    const selBtn = e.target.closest('[data-action="select-all"]');
+                    if (selBtn) this.selectAllAvailable(selBtn.dataset.personId, new Date(selBtn.dataset.monday));
+                    const delBtn = e.target.closest('[data-action="delete-person"]');
+                    if (delBtn) this.deletePerson(Number(delBtn.dataset.index));
+                    const absentBtn = e.target.closest('[data-action="toggle-absent"]');
+                    if (absentBtn) {
+                        const pid = absentBtn.dataset.personId;
+                        const cls = this.data[this.currentClass];
+                        if (!cls.absentPersons) cls.absentPersons = {};
+                        cls.absentPersons[pid] = !cls.absentPersons[pid];
+                        if (!cls.absentPersons[pid]) delete cls.absentPersons[pid];
+                        this.saveData(`klassen/${this.currentClass}`, cls);
+                        this.renderTable(true);
+                    }
+                });
+                tbody.addEventListener('blur', (e) => {
+                    const inp = e.target.closest('[data-action="rename-person"]');
+                    if (inp) {
+                        const idx = Number(inp.dataset.index);
+                        if (this.people[idx]) { this.people[idx].name = inp.value.trim(); this.saveData(`klassen/${this.currentClass}`, this.data[this.currentClass]); }
+                    }
+                    const newInp = e.target.closest('[data-action="new-person"]');
+                    if (newInp) {
+                        const val = newInp.value.trim();
+                        const pid = newInp.dataset.personId;
+                        if (val && !this.people.some(p => p.id === pid)) {
+                            this.people.push({ name: val, id: pid });
+                            this.saveData(`klassen/${this.currentClass}`, this.data[this.currentClass]);
+                            this.render();
+                        }
+                    }
+                }, true);
+                tbody.addEventListener('keydown', (e) => {
+                    if (e.target.closest('[data-action="new-person"]') && e.key === 'Enter') {
+                        e.preventDefault(); e.target.blur();
+                    }
+                });
+            }
+
+            render(force = false) {
+                this.renderWeekDisplay();
+                this.renderTable(force);
+                this.updateCurrentSpecialDayDisplay();
+                this.updateStats();
+            }
+
+            updateStats() {
+                const total = this.people.filter(p => p.name.trim()).length;
+                const weeks = this.getWeeksToRender();
+                let present = 0;
+                this.people.forEach(person => {
+                    if (!person.name.trim()) return;
+                    let hasAny = false;
+                    weeks.forEach(monday => {
+                        this.getWeekDates(monday).forEach(date => {
+                            if (this.attendance[`${person.id}_${this.formatDate(date)}`]) hasAny = true;
+                        });
+                    });
+                    if (hasAny) present++;
+                });
+                const s = document.getElementById('statStudents');
+                const p = document.getElementById('statPresent');
+                const a = document.getElementById('statAbsent');
+                if (s) s.textContent = total;
+                if (p) p.textContent = present;
+                if (a) a.textContent = total - present;
+            }
+
+            updateCurrentSpecialDayDisplay() {
+                const el = document.getElementById('currentSpecialDay');
+                const found = [];
+                this.getWeekDates(this.currentWeek).forEach(date => {
+                    const info = this.getSpecialDayInfo(this.formatDate(date));
+                    if (info) found.push(info);
+                });
+                const vacations = found.filter(d => d.type === 'vacation');
+                const display   = vacations.length > 0 ? vacations : found;
+                if (display.length > 0) {
+                    el.textContent = [...new Set(display.map(d => d.name))].join(', ');
+                    el.style.display = 'block';
+                } else {
+                    el.style.display = 'none';
+                }
+            }
+
+            getWeeksToRender() {
+                if (this.viewMode === 'week') return [new Date(this.currentWeek)];
+                if (this.viewMode === 'holiday' && this.currentHolidayId) {
+                    const holiday = this.specialDays.find(d => d.id === this.currentHolidayId);
+                    if (!holiday) return [new Date(this.currentWeek)];
+                    const start = new Date(holiday.startDate); this.setToMonday(start);
+                    const end   = new Date(holiday.endDate);
+                    const weeks = [];
+                    let cur = new Date(start);
+                    while (cur <= end) {
+                        const fri = new Date(cur); fri.setDate(fri.getDate() + 4);
+                        if (fri >= new Date(holiday.startDate) || cur <= new Date(holiday.endDate)) weeks.push(new Date(cur));
+                        cur.setDate(cur.getDate() + 7);
+                    }
+                    return weeks.length > 0 ? weeks : [new Date(this.currentWeek)];
+                }
+                return [new Date(this.currentWeek)];
+            }
+
+            renderWeekDisplay() {
+                const weeks = this.getWeeksToRender();
+                const first = this.getWeekDates(weeks[0]);
+                const last  = this.getWeekDates(weeks[weeks.length - 1]);
+                const start = this.formatDisplayDate(first[0]);
+                const end   = this.formatDisplayDate(last[4]);
+
+                const wd = document.getElementById('weekDisplay');
+                if (this.viewMode === 'holiday') {
+                    const h = this.specialDays.find(d => d.id === this.currentHolidayId);
+                    wd.textContent = h ? h.name : `${start} – ${end}`;
+                } else {
+                    wd.textContent = `${start} – ${end}`;
+                }
+
+                const headers  = document.querySelectorAll('th[data-day]');
+                const dayNames = ['Montag', 'Dienstag', 'Mittwoch', 'Donnerstag', 'Freitag'];
+                headers.forEach((th, i) => {
+                    if (this.viewMode === 'holiday') {
+                        th.innerHTML = `<div style="font-size:11px;">${dayNames[i]}</div>`;
+                    } else {
+                        const date = this.formatDisplayDate(first[i]);
+                        th.innerHTML = `<div style="font-size:11px;">${dayNames[i]}</div><div style="font-size:10px;font-weight:400;color:var(--ink-faint);margin-top:3px;">${date}</div>`;
+                    }
+                });
+            }
+
+            renderTable(force = false) {
+                const key = `${this.currentClass}_${this.viewMode}_${this.currentWeek.toISOString()}_${this.currentHolidayId}_${this.people.length}`;
+                if (!force && key === this._lastRenderKey) return;
+                this._lastRenderKey = key;
+
+                const tbody = document.getElementById('tableBody');
+                tbody.innerHTML = '';
+
+                if (!this.isDataLoaded && this.encryptionKey === null) {
+                    for (let i = 0; i < 4; i++) tbody.appendChild(this.createSkeletonRow());
+                    return;
+                }
+
+                const weeks = this.getWeeksToRender();
+                this.people.forEach((person, idx) => {
+                    if (person.name.trim()) {
+                        this.createPersonRows(person, idx, false, weeks).forEach(r => tbody.appendChild(r));
+                    }
+                });
+                this.createPersonRows({ name: '', id: Date.now().toString() }, this.people.length, true, weeks)
+                    .forEach(r => tbody.appendChild(r));
+            }
+
+            createSkeletonRow() {
+                const row = document.createElement('tr');
+                row.className = 'table-row group-even';
+                row.innerHTML = `
+                    <td class="name-cell"><div style="display:flex;align-items:center;gap:8px;">
+                        <div class="skeleton" style="width:28px;height:28px;border-radius:7px;flex-shrink:0;"></div>
+                        <div class="skeleton" style="width:130px;height:16px;"></div>
+                    </div></td>
+                    <td class="week-cell"><div class="skeleton" style="width:80px;height:14px;margin:auto;"></div></td>
+                    ${Array(5).fill('').map(() => `<td class="day-cell"><div class="skeleton" style="width:22px;height:22px;border-radius:6px;margin:auto;"></div></td>`).join('')}
+                    <td class="action-cell"><div class="skeleton" style="width:56px;height:22px;border-radius:6px;margin:auto;"></div></td>`;
+                return row;
+            }
+
+            animateDecryption(inputEl, finalWord) {
+                if (!this.isDecrypting || !finalWord) return;
+                const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789@#$!%&*^~";
+                let iterations = 0;
+                inputEl.classList.add('matrix-text');
+                const interval = setInterval(() => {
+                    inputEl.value = finalWord.split('').map((letter, i) => {
+                        if (i < iterations) return letter;
+                        return chars[Math.floor(Math.random() * chars.length)];
+                    }).join('');
+                    if (iterations >= finalWord.length) {
+                        clearInterval(interval);
+                        inputEl.classList.remove('matrix-text');
+                        inputEl.value = finalWord;
+                    }
+                    iterations += 1 / 3;
+                }, 30);
+            }
+
+            createPersonRows(person, index, isEmpty, weeksToRender) {
+                const rows    = [];
+                const numWeeks = weeksToRender.length;
+                const groupClass = index % 2 === 0 ? 'group-even' : 'group-odd';
+
+                const isAbsent = !isEmpty && !!(this.data[this.currentClass].absentPersons?.[person.id]);
+
+                weeksToRender.forEach((monday, weekIdx) => {
+                    const row = document.createElement('tr');
+                    row.className = `table-row ${isEmpty ? 'row-new-entry' : groupClass}${isAbsent ? ' row-absent' : ''}`;
+
+                    // Name cell (first week only, spans all weeks)
+                    if (weekIdx === 0) {
+                        const nameCell = document.createElement('td');
+                        nameCell.className = 'name-cell';
+                        nameCell.rowSpan = numWeeks;
+
+                        const wrap = document.createElement('div');
+                        wrap.style.cssText = 'display:flex;align-items:center;gap:8px;';
+
+                        if (!isEmpty && person.name.trim()) {
+                            const colors = ['#2d5a3d','#1e6b7a','#7a3a6b','#5a6b1e','#6b3a1e','#1e3a6b'];
+                            const ci = person.name.charCodeAt(0) % colors.length;
+                            const initials = person.name.trim().split(/[\s,]+/).map(w => w[0]).slice(0,2).join('').toUpperCase();
+                            const avatar = document.createElement('div');
+                            avatar.className = 'name-avatar';
+                            avatar.style.background = colors[ci];
+                            avatar.textContent = initials;
+                            wrap.appendChild(avatar);
+                        }
+
+                        if (isEmpty) {
+                            const plusIcon = document.createElement('div');
+                            plusIcon.style.cssText = 'width:26px;height:26px;border-radius:7px;background:var(--green-light);border:1.5px dashed var(--green-mid);display:flex;align-items:center;justify-content:center;flex-shrink:0;';
+                            plusIcon.innerHTML = `<svg width="12" height="12" fill="none" stroke="var(--green)" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>`;
+                            wrap.appendChild(plusIcon);
+                        }
+
+                        const inp = document.createElement('input');
+                        inp.type = 'text';
+                        inp.value = person.name;
+                        inp.className = 'name-input';
+                        inp.style.width = isEmpty ? '155px' : '150px';
+                        inp.placeholder = isEmpty ? 'Name eingeben…' : '';
+
+                        if (isEmpty) {
+                            inp.dataset.action = 'new-person';
+                            inp.dataset.personId = person.id;
+                        } else {
+                            if (this.isDecrypting && this.people.length < 15) this.animateDecryption(inp, person.name);
+                            inp.dataset.action = 'rename-person';
+                            inp.dataset.index  = index;
+                        }
+
+                        wrap.appendChild(inp);
+                        nameCell.appendChild(wrap);
+                        row.appendChild(nameCell);
+                    }
+
+                    // Week cell
+                    const weekCell = document.createElement('td');
+                    weekCell.className = 'week-cell';
+                    const weekDates = this.getWeekDates(monday);
+                    const s = weekDates[0].toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit' });
+                    const e = weekDates[4].toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit' });
+                    if (this.viewMode === 'holiday') {
+                        weekCell.innerHTML = `<div style="font-size:10.5px;font-weight:700;color:var(--ink-2);text-transform:uppercase;letter-spacing:0.06em;">Woche ${weekIdx + 1}</div><div style="font-size:10px;color:var(--ink-faint);margin-top:2px;background:var(--surface-2);padding:2px 6px;border-radius:5px;border:1px solid var(--border-soft);">${s}–${e}</div>`;
+                    } else {
+                        weekCell.innerHTML = `<div style="font-size:10.5px;font-weight:600;color:var(--ink-muted);">Aktuelle</div><div style="font-size:10.5px;font-weight:700;color:var(--ink-2);text-transform:uppercase;letter-spacing:0.06em;">Woche</div>`;
+                    }
+                    row.appendChild(weekCell);
+
+                    // Day cells
+                    weekDates.forEach((date) => {
+                        const dayCell = document.createElement('td');
+                        dayCell.className = 'day-cell';
+                        const dateStr = this.formatDate(date);
+                        const sdInfo  = this.getSpecialDayInfo(dateStr);
+
+                        if (!isEmpty) {
+                            if (sdInfo && sdInfo.type === 'closed') {
+                                dayCell.classList.add('closed');
+                                dayCell.innerHTML = `<svg width="14" height="14" fill="none" stroke="var(--red)" viewBox="0 0 24 24" stroke-width="2" style="opacity:0.55"><path stroke-linecap="round" stroke-linejoin="round" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"/></svg>`;
+                            } else {
+                                const cb = document.createElement('input');
+                                cb.type = 'checkbox';
+                                cb.className = 'cb';
+                                cb.disabled = !sdInfo || sdInfo.type !== 'vacation';
+                                const key = `${person.id}_${dateStr}`;
+                                cb.checked = this.attendance[key] || false;
+                                cb.dataset.action = 'toggle-attendance';
+                                cb.dataset.attendanceKey = key;
+
+                                if (!cb.disabled) {
+                                    dayCell.classList.add('clickable');
+                                    dayCell.dataset.action = 'cell-click';
+                                }
+
+                                const wrap = document.createElement('div');
+                                wrap.style.cssText = 'display:flex;justify-content:center;align-items:center;';
+                                wrap.appendChild(cb);
+                                dayCell.appendChild(wrap);
+                            }
+                        }
+                        row.appendChild(dayCell);
+                    });
+
+                    // Action cell
+                    const actionCell = document.createElement('td');
+                    actionCell.className = 'action-cell';
+
+                    if (!isEmpty) {
+                        const wrap = document.createElement('div');
+                        wrap.style.cssText = 'display:flex;gap:4px;justify-content:center;align-items:center;';
+
+                        const selBtn = document.createElement('button');
+                        selBtn.className = 'row-action-btn';
+                        selBtn.title = 'Alle verfügbaren Tage dieser Woche auswählen';
+                        selBtn.innerHTML = `<svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>`;
+                        selBtn.dataset.action = 'select-all';
+                        selBtn.dataset.personId = person.id;
+                        selBtn.dataset.monday   = monday.toISOString();
+                        wrap.appendChild(selBtn);
+
+                        if (weekIdx === 0) {
+                            const absentBtn = document.createElement('button');
+                            absentBtn.className = `row-action-btn absent-btn${isAbsent ? ' is-absent' : ''}`;
+                            absentBtn.title = isAbsent ? 'Anwesenheit wiederherstellen' : 'Person als abwesend markieren';
+                            absentBtn.innerHTML = `<svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><circle cx="12" cy="12" r="9"/><path stroke-linecap="round" d="M4.93 4.93l14.14 14.14"/></svg>`;
+                            absentBtn.dataset.action = 'toggle-absent';
+                            absentBtn.dataset.personId = person.id;
+                            wrap.appendChild(absentBtn);
+
+                            const delBtn = document.createElement('button');
+                            delBtn.className = 'row-action-btn delete';
+                            delBtn.title = 'Person löschen';
+                            delBtn.innerHTML = `<svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>`;
+                            delBtn.dataset.action = 'delete-person';
+                            delBtn.dataset.index  = index;
+                            wrap.appendChild(delBtn);
+                        }
+
+                        actionCell.appendChild(wrap);
+                    }
+                    row.appendChild(actionCell);
+                    rows.push(row);
+                });
+
+                return rows;
+            }
+
+            selectAllAvailable(personId, monday) {
+                this.getWeekDates(new Date(monday)).forEach(date => {
+                    const dateStr = this.formatDate(date);
+                    const sdInfo  = this.getSpecialDayInfo(dateStr);
+                    if (sdInfo && sdInfo.type === 'vacation') {
+                        this.attendance[`${personId}_${dateStr}`] = true;
+                    }
+                });
+                this.saveData(`klassen/${this.currentClass}`, this.data[this.currentClass]);
+                this.render();
+            }
+
+            deletePerson(index) {
+                const person = this.people[index];
+                if (person) {
+                    this.people.splice(index, 1);
+                    Object.keys(this.attendance).forEach(key => {
+                        if (key.startsWith(person.id + '_')) delete this.attendance[key];
+                    });
+                    this.saveData(`klassen/${this.currentClass}`, this.data[this.currentClass]);
+                    this.render();
+                }
+            }
+
+            getSpecialDayInfo(dateStr) {
+                for (const sd of this.specialDays) {
+                    if (sd.holidayDate && dateStr === sd.holidayDate) return { type: 'closed', name: sd.holidayName };
+                }
+                const date = new Date(dateStr);
+                for (const sd of this.specialDays) {
+                    if (date >= new Date(sd.startDate) && date <= new Date(sd.endDate)) {
+                        return { type: sd.type, name: sd.name };
+                    }
+                }
+                return null;
+            }
+
+            showSpecialDaysModal() {
+                document.getElementById('specialDaysModal').classList.add('open');
+                document.body.style.overflow = 'hidden';
+                this.renderSpecialDaysList();
+            }
+            hideSpecialDaysModal() {
+                document.getElementById('specialDaysModal').classList.remove('open');
+                document.body.style.overflow = '';
+            }
+
+            addSpecialDay() {
+                const name        = document.getElementById('specialDayName').value.trim();
+                const type        = document.getElementById('specialDayType').value;
+                const startDate   = document.getElementById('specialDayStart').value;
+                const endDate     = document.getElementById('specialDayEnd').value;
+                const holidayName = document.getElementById('holidayName').value.trim();
+                const holidayDate = document.getElementById('holidayDate').value;
+                if (!name || !startDate || !endDate) return;
+
+                const sd = { id: Date.now().toString(), name, type, startDate, endDate };
+                if (holidayName && holidayDate) { sd.holidayName = holidayName; sd.holidayDate = holidayDate; }
+                this.specialDays.push(sd);
+                this.saveData('specialDays', this.specialDays);
+                document.getElementById('specialDayForm').reset();
+                this.renderSpecialDaysList();
+                this.updateQuickNav();
+                this.render();
+            }
+
+            renderSpecialDaysList() {
+                const container = document.getElementById('specialDaysList');
+                container.innerHTML = '';
+                if (this.specialDays.length === 0) {
+                    container.innerHTML = '<p style="text-align:center;color:var(--ink-muted);font-size:13px;padding:20px;font-style:italic;">Noch keine Sondertage definiert.</p>';
+                    return;
+                }
+                this.specialDays.sort((a, b) => new Date(a.startDate) - new Date(b.startDate));
+                this.specialDays.forEach(sd => {
+                    const item = document.createElement('div');
+                    item.className = 'special-day-item slide-up';
+                    const badgeClass = sd.type === 'closed' ? 'badge-closed' : 'badge-vacation';
+                    const badgeText  = sd.type === 'closed' ? 'Geschlossen' : 'Ferien';
+
+                    item.innerHTML = `
+                        <div style="flex:1;">
+                            <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">
+                                <span style="font-size:15px;font-weight:700;font-family:'Playfair Display',serif;color:var(--ink);">${sd.name}</span>
+                                <span class="badge ${badgeClass}">${badgeText}</span>
+                            </div>
+                            <div style="font-size:12.5px;color:var(--ink-muted);">
+                                <svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" style="display:inline;vertical-align:-1px;margin-right:4px;"><path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                                ${this.formatDisplayDate(new Date(sd.startDate))} bis ${this.formatDisplayDate(new Date(sd.endDate))}
+                            </div>
+                            ${sd.holidayName ? `<div style="font-size:12px;color:var(--amber);margin-top:5px;font-weight:500;">↳ Feiertag: <b>${sd.holidayName}</b> am ${this.formatDisplayDate(new Date(sd.holidayDate))}</div>` : ''}
+                        </div>
+                        <button class="row-action-btn delete" title="Löschen" data-delete-id="${sd.id}" style="flex-shrink:0;width:32px;height:32px;">
+                            <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                        </button>
+                    `;
+                    item.querySelector('[data-delete-id]').addEventListener('click', () => this.deleteSpecialDay(sd.id));
+                    container.appendChild(item);
+                });
+            }
+
+            deleteSpecialDay(id) {
+                this.specialDays = this.specialDays.filter(d => d.id !== id);
+                this.saveData('specialDays', this.specialDays);
+                this.renderSpecialDaysList();
+                this.updateQuickNav();
+                this.render();
+            }
+
+            updateQuickNav() {
+                const select = document.getElementById('quickNav');
+                select.innerHTML = '<option value="">Zeitraum wählen…</option>';
+                this.specialDays.sort((a, b) => new Date(a.startDate) - new Date(b.startDate));
+                this.specialDays.forEach(sd => {
+                    const opt = document.createElement('option');
+                    opt.value = sd.id;
+                    opt.textContent = `${sd.name} (${this.formatDisplayDate(new Date(sd.startDate))})`;
+                    select.appendChild(opt);
+                });
+            }
+
+            generateOverviewData() {
+                const listData  = [];
+                const summaryMap = {};
+                const weeks = this.getWeeksToRender();
+
+                weeks.forEach(monday => {
+                    this.getWeekDates(monday).forEach(date => { summaryMap[this.formatDate(date)] = 0; });
+                });
+
+                Object.keys(this.data).forEach(classKey => {
+                    const cd = this.data[classKey];
+                    const className = `Klasse ${classKey.replace('class', '')}`;
+                    cd.people.forEach(person => {
+                        const fullName = person.name.trim();
+                        if (!fullName) return;
+                        if (cd.absentPersons?.[person.id]) return;
+                        const parts = fullName.split(' ');
+                        let vorname = '', nachname = '';
+                        if (parts.length > 1) { nachname = parts.pop(); vorname = parts.join(' '); }
+                        else { vorname = parts[0]; }
+
+                        Object.keys(cd.attendance).forEach(key => {
+                            if (key.startsWith(person.id + '_') && cd.attendance[key]) {
+                                const dateStr = key.split('_')[1];
+                                if (summaryMap[dateStr] !== undefined) {
+                                    listData.push({ className, vorname, nachname, formattedDate: this.formatDisplayDate(new Date(dateStr)), dateObj: new Date(dateStr) });
+                                    summaryMap[dateStr]++;
+                                }
+                            }
+                        });
+                    });
+                });
+
+                listData.sort((a, b) => {
+                    if (a.className !== b.className) return a.className.localeCompare(b.className);
+                    if (a.nachname  !== b.nachname)  return a.nachname.localeCompare(b.nachname);
+                    if (a.vorname   !== b.vorname)   return a.vorname.localeCompare(b.vorname);
+                    return a.dateObj - b.dateObj;
+                });
+
+                const summaryData = Object.keys(summaryMap).sort().map(dateStr => ({
+                    formattedDate: this.formatDisplayDate(new Date(dateStr)),
+                    count: summaryMap[dateStr],
+                    dateObj: new Date(dateStr)
+                }));
+
+                return { listData, summaryData };
+            }
+
+            showOverviewModal() {
+                document.getElementById('overviewModal').classList.add('open');
+                document.body.style.overflow = 'hidden';
+                const subtitle = document.getElementById('overviewModalSubtitle');
+                if (this.viewMode === 'holiday' && this.currentHolidayId) {
+                    const h = this.specialDays.find(d => d.id === this.currentHolidayId);
+                    subtitle.textContent = `Ferienblock: ${h ? h.name : ''}`;
+                } else {
+                    const wd = this.getWeekDates(this.currentWeek);
+                    subtitle.textContent = `Woche vom ${this.formatDisplayDate(wd[0])} bis ${this.formatDisplayDate(wd[4])}`;
+                }
+                this.renderOverviewData();
+            }
+            hideOverviewModal() {
+                document.getElementById('overviewModal').classList.remove('open');
+                document.body.style.overflow = '';
+            }
+
+            renderOverviewData() {
+                const { listData, summaryData } = this.generateOverviewData();
+                const listBody    = document.getElementById('overviewListBody');
+                const summaryBody = document.getElementById('overviewSummaryBody');
+                const listEmpty   = document.getElementById('overviewListEmpty');
+
+                listBody.innerHTML = '';
+                summaryBody.innerHTML = '';
+
+                // Apply current sort to listData
+                const col = this.overviewListSortCol;
+                const dir = this.overviewListSortDir;
+                const sortedList = [...listData].sort((a, b) => {
+                    let cmp = col === 'dateObj'
+                        ? a.dateObj - b.dateObj
+                        : (a[col] || '').localeCompare(b[col] || '', 'de');
+                    return dir === 'asc' ? cmp : -cmp;
+                });
+
+                // Update sort indicators on headers
+                document.querySelectorAll('#overviewListTable th.sortable').forEach(th => {
+                    th.classList.remove('sort-asc', 'sort-desc');
+                    const indicator = th.querySelector('.sort-indicator');
+                    if (th.dataset.sort === col) {
+                        th.classList.add(dir === 'asc' ? 'sort-asc' : 'sort-desc');
+                        indicator.textContent = dir === 'asc' ? '↑' : '↓';
+                    } else {
+                        indicator.textContent = '⇅';
+                    }
+                });
+
+                if (sortedList.length === 0) {
+                    listBody.closest('table').style.display = 'none';
+                    listEmpty.style.display = '';
+                } else {
+                    listBody.closest('table').style.display = '';
+                    listEmpty.style.display = 'none';
+                    sortedList.forEach(r => {
+                        const tr = document.createElement('tr');
+                        tr.innerHTML = `<td>${r.className}</td><td style="font-weight:500;">${r.vorname}</td><td style="font-weight:700;color:var(--ink);">${r.nachname}</td><td>${r.formattedDate}</td>`;
+                        listBody.appendChild(tr);
+                    });
+                }
+
+                summaryData.forEach(r => {
+                    const tr = document.createElement('tr');
+                    const sdInfo = this.getSpecialDayInfo(this.formatDate(r.dateObj));
+                    let dateTd  = `<td style="font-weight:600;color:var(--ink);">${r.formattedDate}`;
+                    let countTd = `<td style="font-size:15px;font-weight:700;font-family:'Playfair Display',serif;color:${r.count > 0 ? 'var(--green)' : 'var(--ink-faint)'};">${r.count}</td>`;
+                    if (sdInfo && sdInfo.type === 'closed') {
+                        dateTd += ` <span class="badge badge-closed" style="margin-left:6px;">Geschlossen</span>`;
+                        countTd = `<td style="color:var(--ink-faint);font-style:italic;font-size:13px;">–</td>`;
+                    }
+                    dateTd += '</td>';
+                    tr.innerHTML = dateTd + countTd;
+                    summaryBody.appendChild(tr);
+                });
+            }
+
+            exportToExcel() {
+                if (typeof XLSX === 'undefined') {
+                    alert('Die Export-Bibliothek wird noch geladen. Bitte einen Moment warten.');
+                    return;
+                }
+                const { listData, summaryData } = this.generateOverviewData();
+                const sheet1 = [['Klasse', 'Vorname', 'Nachname', 'Datum']];
+                listData.forEach(r => sheet1.push([r.className, r.vorname, r.nachname, r.formattedDate]));
+
+                const sheet2 = [['Datum', 'Anzahl Anmeldungen', 'Notiz']];
+                summaryData.forEach(r => {
+                    const sdInfo = this.getSpecialDayInfo(this.formatDate(r.dateObj));
+                    const note  = sdInfo && sdInfo.type === 'closed' ? `Geschlossen: ${sdInfo.name}` : '';
+                    const count = sdInfo && sdInfo.type === 'closed' ? 0 : r.count;
+                    sheet2.push([r.formattedDate, count, note]);
+                });
+
+                const wb  = XLSX.utils.book_new();
+                XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(sheet1), 'Namensliste');
+                XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(sheet2), 'Tagesübersicht');
+
+                let filename = `Anwesenheit_${this.formatDate(new Date())}.xlsx`;
+                if (this.viewMode === 'holiday' && this.currentHolidayId) {
+                    const h = this.specialDays.find(d => d.id === this.currentHolidayId);
+                    if (h) filename = `Ferien_Anwesenheit_${h.name}_${this.formatDate(new Date())}.xlsx`;
+                }
+                XLSX.writeFile(wb, filename);
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', () => new WeekPlanner());
+    </script>
+
+</body>
+</html>
