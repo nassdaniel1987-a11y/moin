@@ -617,6 +617,22 @@
         .table-row.row-absent .name-input { color: var(--ink-muted); }
         .table-row.row-absent .day-cell { pointer-events: none; opacity: 0.25; }
 
+        /* New-entry row at the bottom of the table */
+        .row-new-entry td {
+            background: var(--green-light);
+        }
+        .dark .row-new-entry td {
+            background: var(--green-faint);
+        }
+        .row-new-entry .name-input {
+            border-color: rgba(61,122,82,0.25);
+        }
+        .row-new-entry .name-input:focus {
+            border-color: var(--green-mid);
+            background: var(--surface);
+        }
+        .row-new-entry .name-input::placeholder { color: var(--green); font-weight: 500; }
+
         /* ═══════════════════════════════════════════
            CUSTOM CHECKBOX
         ═══════════════════════════════════════════ */
@@ -2067,7 +2083,7 @@
 
                 weeksToRender.forEach((monday, weekIdx) => {
                     const row = document.createElement('tr');
-                    row.className = `table-row ${groupClass}${isAbsent ? ' row-absent' : ''}`;
+                    row.className = `table-row ${isEmpty ? 'row-new-entry' : groupClass}${isAbsent ? ' row-absent' : ''}`;
 
                     // Name cell (first week only, spans all weeks)
                     if (weekIdx === 0) {
@@ -2089,11 +2105,18 @@
                             wrap.appendChild(avatar);
                         }
 
+                        if (isEmpty) {
+                            const plusIcon = document.createElement('div');
+                            plusIcon.style.cssText = 'width:26px;height:26px;border-radius:7px;background:var(--green-light);border:1.5px dashed var(--green-mid);display:flex;align-items:center;justify-content:center;flex-shrink:0;';
+                            plusIcon.innerHTML = `<svg width="12" height="12" fill="none" stroke="var(--green)" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>`;
+                            wrap.appendChild(plusIcon);
+                        }
+
                         const inp = document.createElement('input');
                         inp.type = 'text';
                         inp.value = person.name;
                         inp.className = 'name-input';
-                        inp.style.width = isEmpty ? '170px' : '150px';
+                        inp.style.width = isEmpty ? '155px' : '150px';
                         inp.placeholder = isEmpty ? 'Name eingeben…' : '';
 
                         if (isEmpty) {
