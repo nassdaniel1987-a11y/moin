@@ -1,0 +1,2596 @@
+<!doctype html><html lang="de"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#333333"><meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; connect-src 'none'; worker-src 'self'; manifest-src 'self'; form-action 'none'; base-uri 'none'; object-src 'none'"><link rel="manifest" href="manifest.webmanifest"><link rel="apple-touch-icon" href="icons/apple-touch-icon.png"><link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png"><meta name="apple-mobile-web-app-status-bar-style" content="default">
+<title>Anwesenheit Österfeldschule</title>
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Anwesenheit">
+<style>
+/* Grundfarben aus der Mappe (styles.xml): Kopf #333, Streifen #DCE6F1, Warnung #C00000 */
+:root{
+  --grund:#eef1f5; --flaeche:#ffffff; --tinte:#1b1f24; --grau:#5b6470; --linie:#c9d1db; --linie-hell:#e1e6ec;
+  --kopf:#333333; --kopf-schrift:#ffffff;
+  --zeile:#dce6f1; --zeile2:#f4f7fb; --reiter:#dde3ea;
+  --warn:#c00000; --akzent:#1f5fa8; --akzent-grund:#e2edfa;
+  --haken:#1e7347; --weg:#56657a; --auf-farbe:#ffffff; --auf-akzent:#ffffff;
+  --amber:#8a5200; --amber-grund:#fcefd8;
+  --heute:rgba(31,95,168,.08); --schatten:0 10px 40px rgba(20,30,45,.22);
+  --bald-grund:rgba(31,95,168,.13); --faellig-grund:rgba(138,82,0,.14);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --grund:#12161b; --flaeche:#1a2027; --tinte:#e5eaf0; --grau:#9aa5b3; --linie:#34404d; --linie-hell:#28313b;
+    --kopf:#0b0e11; --kopf-schrift:#f1f4f7;
+    --zeile:#1f2a36; --zeile2:#19212a; --reiter:#222a33;
+    --warn:#ff6b6b; --akzent:#86b6ff; --akzent-grund:#1c2d45;
+    --haken:#2f9c62; --weg:#6b7c93; --auf-farbe:#ffffff; --auf-akzent:#0b0e11;
+    --amber:#f2b25c; --amber-grund:#3a2c17;
+    --heute:rgba(134,182,255,.08); --schatten:0 10px 40px rgba(0,0,0,.55);
+    --bald-grund:rgba(134,182,255,.16); --faellig-grund:rgba(242,178,92,.16);
+  }
+}
+:root[data-theme="dark"]{
+  --grund:#12161b; --flaeche:#1a2027; --tinte:#e5eaf0; --grau:#9aa5b3; --linie:#34404d; --linie-hell:#28313b;
+  --kopf:#0b0e11; --kopf-schrift:#f1f4f7;
+  --zeile:#1f2a36; --zeile2:#19212a; --reiter:#222a33;
+  --warn:#ff6b6b; --akzent:#86b6ff; --akzent-grund:#1c2d45;
+  --haken:#2f9c62; --weg:#6b7c93; --auf-farbe:#ffffff; --auf-akzent:#0b0e11;
+  --amber:#f2b25c; --amber-grund:#3a2c17;
+  --heute:rgba(134,182,255,.08); --schatten:0 10px 40px rgba(0,0,0,.55);
+  --bald-grund:rgba(134,182,255,.16); --faellig-grund:rgba(242,178,92,.16);
+}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+body{margin:0}
+html{-webkit-text-size-adjust:100%;touch-action:manipulation}   /* kein Doppeltipp-Zoom beim schnellen ✓ → ○ */
+/* Kein Gummiband: Die Seite selbst scrollt nicht mehr – sie ist genau so hoch wie der
+   Bildschirm, und gescrollt wird nur im Inhalt (<main>). Dadurch gibt es nichts,
+   was über den Rand hinaus federn könnte. Beim Drucken wird das unten aufgehoben. */
+html,body{height:100%;overflow:hidden;overscroll-behavior:none}
+button,a,input,select,textarea,label,summary{touch-action:manipulation}
+.box,.eintrag,.reiter button,td.name button,.paar button,.bereiche button{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+body{background:var(--grund);color:var(--tinte);font:15px/1.4 -apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;font-variant-numeric:tabular-nums;-webkit-tap-highlight-color:transparent}
+/* Schriftgröße der Listen – Einstellung je iPad, ändert keine Daten */
+body{--tskala:1}
+body.gross{--tskala:1.12}
+body.sehrgross{--tskala:1.26}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:3px solid var(--akzent);outline-offset:2px}
+h1,h2,h3{text-wrap:balance}
+
+/* Kopfleiste: dunkles Band wie der Tabellenkopf der Mappe */
+/* Schmal halten: die Leiste wird selten angetippt, jeder Pixel fehlt sonst der Liste */
+.kopf{background:var(--kopf);color:var(--kopf-schrift);display:flex;align-items:center;gap:16px;padding:calc(5px + env(safe-area-inset-top)) calc(16px + env(safe-area-inset-right)) 5px calc(16px + env(safe-area-inset-left));position:sticky;top:0;z-index:6;flex-wrap:wrap}
+.marke{display:flex;flex-direction:column;line-height:1.1;margin-right:auto}
+.marke b{font-size:15px;letter-spacing:.05em}
+.marke span{font-size:12px;opacity:.7}
+.bereiche{display:flex;gap:2px;background:rgba(255,255,255,.08);padding:3px;border-radius:9px}
+.bereiche button{border:0;background:transparent;color:var(--kopf-schrift);padding:6px 12px;border-radius:6px;min-height:34px;font-size:14px;opacity:.78}
+.bereiche button[aria-current="true"]{background:var(--kopf-schrift);color:var(--kopf);opacity:1;font-weight:600}
+/* Hinweis zur Sicherung bzw. zu Beispieldaten: im Kopfband statt in einer eigenen Zeile */
+.bandkopf{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--kopf-schrift);min-width:0;
+  background:rgba(255,255,255,.08);border-radius:8px;padding:4px 10px;min-height:32px}
+.bandkopf b{color:#f5c178;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.bandkopf .knopf{border-color:rgba(255,255,255,.35);background:none;color:var(--kopf-schrift);padding:3px 10px;min-height:28px;font-size:13px;flex:none}
+
+body{display:flex;flex-direction:column;height:100vh;height:100dvh}
+main{padding:16px 20px 40px;max-width:1400px;margin:0 auto;width:100%;
+  flex:1;min-height:0;overflow-y:auto;overscroll-behavior:none;-webkit-overflow-scrolling:touch}
+
+/* Bedienelemente */
+.knopf{border:1px solid var(--linie);background:var(--flaeche);border-radius:8px;padding:8px 14px;min-height:44px;font-weight:600}
+.knopf.haupt{background:var(--akzent);border-color:var(--akzent);color:var(--flaeche)}
+.knopf.flach{border-color:transparent;background:none;color:var(--akzent);padding:4px 2px;min-height:44px;display:inline-flex;align-items:center}
+.knopf.gefahr{color:var(--warn)}
+.knopf.gefahr-voll{background:var(--warn);border-color:var(--warn);color:var(--flaeche)}
+.paar{display:inline-flex;border:1px solid var(--linie);border-radius:8px;overflow:hidden;background:var(--flaeche)}
+.paar button{border:0;border-left:1px solid var(--linie-hell);background:none;padding:8px 14px;min-height:44px;color:var(--grau);font-weight:600}
+.paar button:first-child{border-left:0}
+.paar button[aria-pressed="true"]{background:var(--akzent-grund);color:var(--akzent)}
+.pfeil{width:44px;height:44px;border:1px solid var(--linie);background:var(--flaeche);border-radius:8px;font-size:22px;line-height:1}
+
+.werkzeug{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:14px}
+.woche{display:flex;align-items:center;gap:6px}
+/* Selten Gebrauchtes (Drucken, Ferienzeiten) steht klein am Ende der Legendenzeile */
+.legendezeile .nebenbei{margin-left:auto;display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+.legendezeile .nebenbei .knopf.flach{color:var(--grau);font-size:inherit}
+.woche .kw{min-width:200px;text-align:center;line-height:1.2}
+.woche .kw b{font-size:15px}
+.woche .kw span{display:block;color:var(--grau);font-size:12px}
+.stand-heute{margin-left:auto;font-size:14px;color:var(--grau);text-align:right}
+.stand-heute b{color:var(--tinte)}
+.naechste{flex-basis:100%;text-align:right;font-size:14px;color:var(--akzent)}
+.naechste:empty{display:none}
+
+/* Karteireiter oben am Blatt */
+.reiter{display:flex;gap:3px;overflow-x:auto;padding:0 8px;position:relative;z-index:1;margin-bottom:-1px;scrollbar-width:none}
+.reiter button{flex:none;border:1px solid var(--linie);border-bottom:0;background:var(--reiter);color:var(--grau);border-radius:10px 10px 0 0;padding:9px 16px;min-height:46px;font-weight:600;white-space:nowrap}
+.reiter button small{font-weight:400;font-size:12px;margin-left:6px;opacity:.8}
+.reiter button[aria-pressed="true"]{background:var(--flaeche);color:var(--tinte);box-shadow:0 1px 0 var(--flaeche)}
+.reiter .luecke{flex:none;width:14px}
+
+/* Das Blatt */
+.blatt{background:var(--flaeche);border:1px solid var(--linie);border-radius:12px;overflow:hidden}
+.reiter+.blatt{border-top-left-radius:0}
+.blattkopf{display:grid;grid-template-columns:1fr auto;gap:2px 16px;padding:12px 18px 10px}
+.blattkopf h1{margin:0;font-size:22px;letter-spacing:.03em}
+.blattkopf .einr{text-align:right;font-weight:700;color:var(--grau);font-size:14px;align-self:center}
+.blattkopf .unter{font-weight:700;color:var(--grau);font-size:14px}
+.blattkopf .kwtext{text-align:right;font-style:italic;color:var(--grau);font-size:13px}
+/* Am Bildschirm steht der Blattkopf in einer Zeile – benannt wird er weiterhin
+   unter Einstellungen → Listen benennen; auf Papier bleibt er gestapelt. */
+.nurdruck{display:none}
+.kopfzeile{grid-column:1/-1;display:flex;flex-wrap:wrap;align-items:baseline;gap:2px 14px}
+.kopfzeile .titel{font-size:calc(17px*var(--tskala));font-weight:700;letter-spacing:.03em}
+.kopfzeile .unter{font-weight:600;color:var(--grau);font-size:calc(14px*var(--tskala))}
+.kopfzeile .rechts{margin-left:auto;display:flex;flex-wrap:wrap;gap:2px 12px;align-items:baseline;color:var(--grau);font-size:calc(13px*var(--tskala))}
+.kopfzeile .einr{font-weight:700}
+.kopfzeile .kwtext{font-style:italic}
+.kopfzeile .datum{font-weight:700;color:var(--akzent);font-style:normal}
+/* Zeichenerklärung: eingeklappt, damit oben Platz für Kinder bleibt */
+.legendezeile{grid-column:1/-1;font-size:calc(13px*var(--tskala));color:var(--grau);display:flex;flex-wrap:wrap;gap:4px 16px;margin-top:8px;align-items:center}
+.legendezeile b{color:var(--tinte)}
+.legendezeile .knopf.flach{font-size:inherit}
+.legende{grid-column:1/-1;font-size:calc(13px*var(--tskala));color:var(--grau);display:flex;flex-wrap:wrap;gap:4px 18px;margin-top:4px;align-items:center}
+.legende span{display:inline-flex;align-items:center;gap:6px}
+.legende b{color:var(--tinte)}
+.legende .zusatz,.legendezeile .zusatz{flex-basis:100%;font-style:italic}
+.mini{width:18px;height:18px;border-radius:4px;display:inline-grid;place-items:center;color:var(--auf-farbe);font-size:11px;font-weight:700;flex:none}
+.mini svg{width:13px;height:13px}
+.mini.da{background:var(--haken)} .mini.weg{border:1.5px solid var(--weg);color:var(--weg)}
+.mini.e{border:1.5px dashed var(--grau);color:var(--grau)}
+
+/* overscroll-behavior: das seitliche Ziehen der Wochenliste soll nicht die Seite mitnehmen */
+.rollen{overflow-x:auto;overscroll-behavior-x:contain}
+table{border-collapse:collapse;width:100%}
+.woche-tabelle{min-width:980px}
+thead th{background:var(--kopf);color:var(--kopf-schrift);font-size:calc(13px*var(--tskala));font-weight:700;padding:8px 6px;text-align:center}
+thead th.links{text-align:left}
+thead th small{display:block;font-weight:400;opacity:.7;font-size:calc(11px*var(--tskala))}
+/* Heute ist der Anker: eigene Kopffläche und senkrechte Kanten durch die Spalte */
+thead th.heute{background:var(--akzent);color:var(--auf-akzent)}   /* im Dunkelmodus ist der Akzent hell – dann dunkle Schrift */
+thead th.heute small{opacity:.8}
+tbody tr:nth-child(odd){background:var(--zeile)}
+tbody tr:nth-child(even){background:var(--zeile2)}
+td{border-bottom:1px solid var(--linie-hell);padding:0 6px;height:calc(56px*var(--tskala));vertical-align:middle}
+td.nr{width:44px;text-align:center;color:var(--grau);font-size:13px}
+td.name{min-width:190px;position:sticky;left:0;background:inherit;z-index:1}
+td.name button{border:0;background:none;padding:6px 0;text-align:left;font-size:calc(17px*var(--tskala));font-weight:600;width:100%;min-height:44px}
+td.hinweis{width:34px;text-align:center;padding:0}
+td.hinweis button{border:0;background:none;padding:6px;color:var(--warn)}
+td.buchung{width:86px;text-align:center;font-size:calc(13px*var(--tskala));color:var(--grau)}
+td.tag{border-left:1px solid var(--linie);padding:0 4px 0 6px;width:140px}
+td.tag.heute{background-image:linear-gradient(var(--heute),var(--heute));box-shadow:inset 2px 0 0 var(--akzent),inset -2px 0 0 var(--akzent)}
+tbody tr:last-child td.tag.heute{box-shadow:inset 2px 0 0 var(--akzent),inset -2px 0 0 var(--akzent),inset 0 -2px 0 var(--akzent)}
+.zelle{display:flex;align-items:center;gap:6px}
+.box{width:44px;height:44px;flex:none;border-radius:8px;border:2px solid var(--grau);background:var(--flaeche);padding:0;position:relative;display:grid;place-items:center;color:var(--auf-farbe);transition:background-color .12s,border-color .12s}
+.box svg{width:22px;height:22px;position:absolute;inset:0;margin:auto;visibility:hidden}
+.box[data-stand="da"]{background:var(--haken);border-color:var(--haken)}
+/* Abgeholt ist erledigt und tritt zurück – der Blick soll bei den Kindern bleiben, die noch da sind */
+.box[data-stand="weg"]{background:transparent;border-color:var(--weg);color:var(--weg)}
+.box[data-stand="da"] svg.h,.box[data-stand="weg"] svg.k{visibility:visible}
+.box.entsch[data-stand=""]{border-style:dashed;background:transparent;color:var(--grau)}
+.box.entsch[data-stand=""]::after{content:"e";font-weight:700;font-size:17px}
+.box:disabled{border-style:dashed;border-color:var(--amber);background:var(--amber-grund);cursor:default}
+/* Tippbestätigung: auf Glas fehlt der Widerstand – ein kurzer Ring zeigt, dass der Tipp angekommen ist */
+@keyframes tipp-ring{from{box-shadow:0 0 0 2px var(--akzent)}to{box-shadow:0 0 0 13px rgba(127,140,160,0)}}
+@keyframes tipp-druck{0%{transform:scale(.82)}55%{transform:scale(1.06)}100%{transform:scale(1)}}
+.box.getippt{animation:tipp-ring .5s ease-out,tipp-druck .28s ease-out;z-index:2}
+.eintrag{flex:1;border:0;background:none;min-height:46px;padding:2px 4px;text-align:left;display:flex;flex-direction:column;justify-content:center;line-height:1.2;border-radius:8px}
+@media (hover:hover){.eintrag:hover{background:rgba(127,140,160,.12)}}
+.eintrag:active{background:rgba(127,140,160,.18)}
+.zeit{font-size:calc(15px*var(--tskala));font-weight:600;display:inline-flex;align-items:center;gap:0 4px;flex-wrap:wrap}
+.zeit .art{font-size:calc(12px*var(--tskala));font-weight:500;color:var(--grau)}
+.zeit.geaendert{color:var(--akzent)}
+.durch{font-size:11px;color:var(--grau);text-decoration:line-through}
+.klein{font-size:calc(12px*var(--tskala));color:var(--grau)}
+.notiz{font-size:calc(12px*var(--tskala));color:var(--akzent);font-style:italic;max-width:88px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.status{display:inline-block;font-size:calc(13px*var(--tskala));font-weight:600;color:var(--amber);background:var(--amber-grund);border-radius:6px;padding:2px 8px;align-self:flex-start}
+/* Entschuldigt: leise im Hintergrund, damit die tatsächlich erwarteten Kinder auffallen */
+td.tag.entsch .zeit{color:var(--grau);font-weight:400}
+td.tag.entsch .box{opacity:.55}
+td.tag.fertig .zeit{color:var(--grau);font-weight:400}
+.strich{color:var(--linie)}
+/* Geht demnächst / ist überfällig – fällt beim Blick auf die Liste sofort auf */
+tbody tr.bald td{background-image:linear-gradient(var(--bald-grund),var(--bald-grund))}
+tbody tr.faellig td{background-image:linear-gradient(var(--faellig-grund),var(--faellig-grund))}
+tbody tr.bald td.name{box-shadow:inset 4px 0 0 var(--akzent)}
+tbody tr.faellig td.name{box-shadow:inset 4px 0 0 var(--amber)}
+tbody tr.bald td.name button,tbody tr.faellig td.name button{font-weight:700}
+.bald-info{display:block;font-size:calc(12px*var(--tskala));font-weight:700;color:var(--akzent)}
+tr.faellig .bald-info{color:var(--amber)}
+/* Heute abwesend: steht am Ende der Tagesliste und tritt zurück */
+tbody tr.ruht{background:var(--grund)}
+tbody tr.ruht td.name button{color:var(--grau);font-weight:400}
+tbody tr.ruht td.buchung,tbody tr.ruht td.notizfeld,tbody tr.ruht td.hinweis{opacity:.65}
+tbody tr.nicht{background:var(--grund)}
+tr.nicht td.name button{color:var(--grau);font-weight:400}
+tr.nicht td.buchung{opacity:.6}
+.nicht-zelle{color:var(--grau);font-style:italic;font-size:14px;border-left:1px solid var(--linie);padding-left:14px}
+.nicht-zelle .knopf{font-style:normal;margin-left:8px}
+.aufbau{display:flex;gap:12px;align-items:flex-start;border:1px solid var(--linie);border-radius:10px;padding:12px 14px;cursor:pointer}
+.aufbau:has(input:checked){border-color:var(--akzent);background:var(--akzent-grund)}
+.aufbau input{width:22px;height:22px;margin:1px 0 0;accent-color:var(--akzent);flex:none}
+.aufbau span{display:grid;gap:2px}
+.aufbau small{color:var(--grau);font-size:13px}
+.buchungswahl{display:flex;gap:8px;flex-wrap:wrap}
+.chipwahl{display:inline-flex;align-items:center;gap:8px;border:1px solid var(--linie);border-radius:10px;padding:8px 12px;min-height:44px;font-weight:600;font-size:15px;color:var(--tinte);cursor:pointer;background:var(--flaeche)}
+.chipwahl:has(input:checked){border-color:var(--akzent);background:var(--akzent-grund)}
+.chipwahl input{width:20px;height:20px;margin:0;accent-color:var(--akzent)}
+.chipwahl small{color:var(--grau);font-weight:400;font-size:12px}
+.unsichtbar{position:absolute;width:1px;height:1px;opacity:0;overflow:hidden;pointer-events:none}
+.staende{list-style:none;margin:0;padding:0;border:1px solid var(--linie-hell);border-radius:10px}
+.staende li{display:flex;align-items:center;gap:12px;padding:8px 12px;border-bottom:1px solid var(--linie-hell)}
+.staende li:last-child{border-bottom:0}
+.staende span{margin-right:auto;display:grid}
+.staende small{color:var(--grau);font-size:12px}
+table.bilanz{width:auto;min-width:280px}
+.bilanz tbody tr{background:none}
+.bilanz td{height:36px;border-bottom:1px solid var(--linie-hell);padding:0 12px 0 0}
+.bilanz td:last-child{text-align:right;font-weight:700}
+.zuordnung{display:grid;gap:10px;margin-top:8px}
+.warnhinweis{margin:0;background:var(--amber-grund);color:var(--amber);border-radius:8px;padding:10px 12px;font-size:14px}
+.start{gap:10px}
+.startwahl{display:grid;gap:3px;text-align:left;border:1px solid var(--linie);background:var(--flaeche);border-radius:12px;padding:14px 16px;cursor:pointer;min-height:64px;font-size:16px;color:var(--tinte)}
+.startwahl span{color:var(--grau);font-size:14px}
+@media (hover:hover){.startwahl:hover{border-color:var(--akzent)}}
+.haus{width:14px;height:14px}
+.dreieck{width:21px;height:19px}
+/* Ein Tag: keine Tabelle mit einer breiten Spalte, sondern eine Zeile je Kind */
+.tagmodus td.tag{width:auto}
+.tagmodus .box{width:48px;height:48px}
+.tagmodus .zeit{font-size:calc(17px*var(--tskala))}
+.tagmodus .notiz{max-width:none;font-size:calc(14px*var(--tskala))}
+.tagmodus td{height:calc(52px*var(--tskala))}
+.tagmodus td.kast{width:1%;padding:0 4px 0 10px}
+.tagmodus td.name{width:1%;min-width:0;padding-right:10px;white-space:nowrap}
+/* Der freie Platz der Zeile trägt die Notiz – in der Wochenansicht ist dafür kein Raum */
+.tagmodus td.notizfeld{width:100%;padding:0}
+.notizknopf{border:0;background:none;width:100%;text-align:left;min-height:44px;padding:4px 10px;border-radius:8px;
+  font-size:calc(14px*var(--tskala));font-style:italic;color:var(--akzent);
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.notizknopf .leer{color:var(--grau);opacity:.5;font-style:normal}
+@media (hover:hover){.notizknopf:hover{background:rgba(127,140,160,.12)}.notizknopf:hover .leer{opacity:.85}}
+.notizknopf:active{background:rgba(127,140,160,.18)}
+.tagmodus td.zelle-tag{width:1%;white-space:nowrap;border-left:0;padding-right:14px}
+.tagmodus td.zelle-tag .zelle{justify-content:flex-end}
+.tagmodus .eintrag{flex-direction:row;align-items:baseline;justify-content:flex-end;gap:4px 12px;flex-wrap:wrap;text-align:right;min-height:44px;min-width:104px}
+.tagmodus .zeit{flex-wrap:nowrap}
+.tagmodus .bald-info{display:inline}
+.jetzt-tabelle td.name{width:100%}
+.jetzt-tabelle td.listen{width:1%;white-space:nowrap;color:var(--grau);font-size:calc(13px*var(--tskala));padding-right:14px}
+.jetzt-tabelle thead th.links{padding-left:0}
+
+/* Kinder, Nachschlagen */
+.titelzeile{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:14px}
+.titelzeile h2{margin:0 auto 0 0;font-size:22px}
+.suche{border:1px solid var(--linie);background:var(--flaeche);border-radius:8px;padding:8px 12px;min-height:44px;min-width:240px}
+.kinder td{height:calc(52px*var(--tskala))}
+.kinder td.name button{font-size:calc(16px*var(--tskala))}
+.kinder td.klein{font-size:calc(13px*var(--tskala))}
+.kinder td.listen{font-size:calc(14px*var(--tskala));color:var(--grau)}
+.ohne{color:var(--amber);font-weight:600}
+.unterueberschrift{font-size:13px;letter-spacing:.06em;text-transform:uppercase;color:var(--grau);margin:24px 0 8px;font-weight:700}
+.nachschlag td{height:calc(46px*var(--tskala));font-size:calc(15px*var(--tskala))}
+.nachschlag a{color:var(--akzent);text-decoration:none;font-weight:600}
+.nachschlag td.warn{color:var(--warn);font-weight:600}
+
+/* Einstellungen */
+.abschnitt{background:var(--flaeche);border:1px solid var(--linie);border-radius:12px;margin-bottom:16px;overflow:hidden}
+.abschnitt>h3{margin:0;padding:14px 18px 0;font-size:17px}
+.abschnitt .innen{padding:10px 18px 18px;display:grid;gap:12px}
+.abschnitt p{margin:0;color:var(--grau);max-width:68ch}
+.abschnitt .reihe{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.anleitung{display:grid;grid-template-columns:minmax(140px,190px) 1fr;gap:2px 18px;margin:0;max-width:80ch}
+.anleitung dt{font-weight:700;padding:7px 0}
+.anleitung dd{margin:0;padding:7px 0;color:var(--grau);border-top:1px solid var(--linie-hell)}
+.anleitung dt+dd{border-top:1px solid var(--linie-hell)}
+.anleitung dt{border-top:1px solid var(--linie-hell)}
+.anleitung dt:first-of-type,.anleitung dt:first-of-type+dd{border-top:0}
+@media (max-width:700px){.anleitung{grid-template-columns:1fr;gap:0}.anleitung dd{padding-top:0;border-top:0;padding-bottom:12px}.anleitung dt{border-top:1px solid var(--linie-hell)}}
+.sicherstand{font-size:20px;font-weight:700}
+.sicherstand.alt{color:var(--amber)}
+.einst{margin-top:10px}
+.einst td{height:auto;padding:6px;border-bottom:1px solid var(--linie-hell)}
+.einst tbody tr{background:var(--flaeche)!important}
+.einst td:first-child{white-space:nowrap;color:var(--grau);font-size:14px;padding-left:18px;width:1%}
+.einst tr.nicht input:not([type=checkbox]){opacity:.45}
+.einst input{width:100%;border:1px solid var(--linie);background:var(--flaeche);border-radius:6px;padding:8px 10px;min-height:42px}
+.feld{display:flex;flex-direction:column;gap:4px;font-size:13px;color:var(--grau);font-weight:600}
+.feld input,.feld select,.feld textarea{border:1px solid var(--linie);background:var(--flaeche);border-radius:8px;padding:9px 11px;min-height:44px;font-weight:400;color:var(--tinte);font-size:15px}
+.feld textarea{min-height:68px;resize:vertical}
+.zwei{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.drei{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+
+/* Dialoge */
+dialog{border:0;border-radius:16px;padding:0;background:var(--flaeche);color:var(--tinte);box-shadow:var(--schatten);width:min(620px,calc(100vw - 32px));max-height:calc(100vh - 40px);max-height:calc(100dvh - 40px);overscroll-behavior:contain}
+dialog.breit{width:min(920px,calc(100vw - 32px))}
+dialog::backdrop{background:rgba(10,15,22,.45)}
+.dkopf{display:flex;align-items:flex-start;gap:12px;padding:18px 20px 12px;border-bottom:1px solid var(--linie-hell);position:sticky;top:0;background:var(--flaeche);z-index:2}
+.dkopf h2{margin:0;font-size:20px}
+.dkopf p{margin:2px 0 0;color:var(--grau);font-size:14px}
+.dkopf .knopf{margin-left:auto}
+.dinhalt{padding:16px 20px 20px;display:grid;gap:16px}
+.dfuss{display:flex;gap:10px;padding:12px 20px 18px;border-top:1px solid var(--linie-hell);position:sticky;bottom:0;background:var(--flaeche)}
+.dfuss .rechts{margin-left:auto;display:flex;gap:10px}
+.sammelleiste{display:flex;align-items:center;gap:10px;flex-wrap:wrap;background:var(--akzent-grund);border:1px solid var(--akzent);border-radius:10px;padding:10px 14px;margin-bottom:12px}
+.sammelleiste select{border:1px solid var(--linie);background:var(--flaeche);border-radius:8px;padding:8px 10px;min-height:44px;color:var(--tinte)}
+.kinder td.wahl{width:52px;text-align:center}
+.kinder td.wahl input{width:24px;height:24px;accent-color:var(--akzent)}
+.blaettern{display:flex;align-items:center;gap:8px;margin-left:12px}
+.blaettern small{color:var(--grau);font-size:12px}
+.blaettern .knopf[disabled]{opacity:.4}
+.wahl{display:flex;gap:8px;flex-wrap:wrap}
+.wahl button{border:2px solid var(--linie);background:var(--flaeche);border-radius:10px;padding:10px 16px;min-height:52px;font-size:16px;font-weight:600;display:inline-flex;align-items:center;gap:8px}
+.wahl svg{width:20px;height:20px}
+.wahl button[data-da][aria-pressed="true"]{background:var(--haken);border-color:var(--haken);color:var(--auf-farbe)}
+.wahl button[data-weg][aria-pressed="true"]{background:var(--weg);border-color:var(--weg);color:var(--auf-farbe)}
+.wahl button[data-ab][aria-pressed="true"]{background:var(--amber-grund);border-color:var(--amber);color:var(--amber)}
+.wahl button:disabled{opacity:.45;cursor:default}
+.info{display:grid;grid-template-columns:130px 1fr;gap:0 12px;background:var(--zeile2);border-radius:10px;padding:6px 14px;font-size:14px;margin:0}
+.info dt,.info dd{margin:0;padding:6px 0}
+.info dt{color:var(--grau);font-weight:600}
+.info dd.warn{color:var(--warn);font-weight:700}
+.info a{color:var(--akzent);font-weight:600;text-decoration:none}
+.klein-hinweis{font-size:13px;color:var(--grau);margin:6px 0 0}
+.gruppe{border:1px solid var(--linie-hell);border-radius:10px;padding:8px 12px}
+.gruppe>label{display:flex;align-items:center;gap:10px;font-weight:700;min-height:40px}
+.gruppe input[type=checkbox]{width:22px;height:22px;accent-color:var(--akzent)}
+.gruppe .klein-hinweis{margin:0 0 6px 32px}
+.zeiten{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin:4px 0 6px}
+.tagfeld{display:grid;gap:3px;font-size:12px;color:var(--grau);font-weight:700}
+.tagfeld select{border:1px solid var(--linie);background:var(--flaeche);border-radius:6px;padding:4px;min-height:38px;font-size:14px;color:var(--tinte);font-weight:400}
+.artknopf{border:1px solid var(--linie);background:var(--flaeche);border-radius:6px;padding:4px 8px;min-height:38px;width:100%;
+  font-size:16px;color:var(--tinte);font-weight:400;display:inline-flex;align-items:center;justify-content:center;gap:6px}
+.artknopf .haus{width:15px;height:15px}
+@media (hover:hover){.artknopf:hover{border-color:var(--akzent)}}
+.stapel{display:grid;gap:8px}
+details.gruppe>summary{font-weight:700;min-height:40px;display:flex;align-items:center;cursor:pointer}
+
+/* Die Meldung steht oben über der Bedienung – unten verdeckte sie die Zeilen, die man als Nächstes sucht */
+.toast{position:fixed;left:50%;top:calc(env(safe-area-inset-top) + 78px);transform:translateX(-50%);background:var(--kopf);color:var(--kopf-schrift);padding:10px 18px;border-radius:10px;box-shadow:var(--schatten);z-index:50;max-width:calc(100vw - 40px)}
+
+/* Safari zoomt in Felder unter 16px hinein – deshalb überall 16px */
+input,select,textarea{font-size:16px!important}
+
+/* iPad hochkant und kleinere Geräte quer: Wochenliste ohne Querscrollen */
+@media (max-width:1120px){
+  .woche-tabelle{min-width:0}
+  .woche-tabelle td.nr{width:28px;padding:0 2px}
+  .woche-tabelle td.name{min-width:118px;padding-right:2px}
+  .woche-tabelle td.name button{font-size:calc(16px*var(--tskala))}
+  .woche-tabelle td.tag{width:auto;padding:0 2px 0 4px}
+  .woche-tabelle .zelle{gap:3px}
+  .woche-tabelle .eintrag{padding:2px 1px}
+  .woche-tabelle .zeit{font-size:calc(14px*var(--tskala))}
+  .woche-tabelle .zeit .art,.woche-tabelle .klein{font-size:calc(11px*var(--tskala))}
+  .woche-tabelle .notiz{max-width:64px}
+  .woche-tabelle th.buchung,.woche-tabelle td.buchung{display:none}
+  main{padding-left:12px;padding-right:12px}
+  .kopf{gap:12px}
+  .bereiche button{padding:8px 11px}   /* damit der Hinweis daneben in dieselbe Zeile passt */
+}
+@media (max-width:900px){
+  .stand-heute{margin-left:0;flex-basis:100%;text-align:left}
+  .zwei,.drei{grid-template-columns:1fr}
+  .kinder .klein,.kinder th.klein{display:none}
+}
+@media (prefers-reduced-motion: reduce){*{transition:none!important;animation:none!important}}
+
+body.gesperrt .kopf,body.gesperrt main{filter:blur(7px);pointer-events:none}
+.pinfeld{font-size:28px;letter-spacing:.4em;text-align:center;width:200px;margin:0 auto;padding:10px;border:1px solid var(--linie);border-radius:10px;background:var(--flaeche);color:var(--tinte)}
+.fehlerband{position:fixed;left:0;right:0;bottom:0;z-index:100;background:var(--warn);color:#fff;display:flex;gap:14px;align-items:center;padding:12px 16px calc(12px + env(safe-area-inset-bottom))}
+.fehlerband .knopf{background:#fff;border-color:#fff;color:var(--warn);flex:none}
+.fehlerband small{opacity:.85}
+
+/* Notfall-Ausdruck: nur das Blatt, in Schwarzweiß, Kopfzeile auf jeder Seite */
+@media print{
+  /* Papier ist immer hell – egal, wie der Bildschirm eingestellt ist */
+  :root,:root[data-theme="dark"],:root:not([data-theme="light"]){
+    --grund:#fff; --flaeche:#fff; --tinte:#000; --grau:#444; --linie:#999; --linie-hell:#bbb;
+    --zeile:#fff; --zeile2:#fff; --kopf:#e8e8e8; --kopf-schrift:#000;
+    --warn:#000; --akzent:#000; --akzent-grund:#fff; --haken:#333; --weg:#666;
+    --auf-farbe:#fff; --auf-akzent:#fff; --amber:#000; --amber-grund:#fff;
+  }
+  .kopf,.werkzeug,.reiter,.sammelleiste,.titelzeile .paar,.titelzeile .suche,.titelzeile .knopf,
+  #band,#toast,#fehlerband,dialog,.bald-info,#legendeAn{display:none!important}
+  body{background:#fff;--tskala:1!important}
+  /* Der feste Bildschirmaufbau wird fürs Papier aufgehoben, sonst käme nur die erste Seite */
+  html,body{height:auto!important;overflow:visible!important;display:block!important}
+  main{overflow:visible!important;height:auto!important;flex:none!important}
+  .legende[hidden]{display:flex!important}
+  .nurdruck{display:grid!important;grid-column:1/-1;grid-template-columns:1fr auto;gap:2px 16px}
+  .kopfzeile{display:none!important}
+  .box[data-stand="weg"]{border-width:2px}
+  main{padding:0;max-width:none}
+  .blatt{border:0;border-radius:0;box-shadow:none;background:#fff}
+  .rollen{overflow:visible}
+  table{min-width:0!important;width:100%}
+  thead{display:table-header-group}
+  tr{break-inside:avoid}
+  td.name{position:static}
+  td,th{border:1px solid #999!important;background:#fff!important;color:#000!important;height:auto;padding:4px 6px}
+  thead th{background:#e8e8e8!important;color:#000!important}
+  .box{border-color:#333!important;background:#fff!important;color:#000!important;width:22px;height:22px}
+  .box svg{visibility:visible!important;width:16px;height:16px}
+  .box[data-stand=""] svg{visibility:hidden!important}
+  .blattkopf{padding:0 0 6px}
+  @page{size:A4 landscape;margin:10mm}
+}
+</style>
+
+<header class="kopf">
+  <div class="marke"><b>Anwesenheit</b><span id="einrichtungKopf">Österfeldschule</span></div>
+  <div class="bandkopf" id="band" hidden></div>
+  <nav class="bereiche" aria-label="Bereiche">
+    <button data-bereich="liste" aria-current="true">Listen</button>
+    <button data-bereich="kinder">Kinder</button>
+    <button data-bereich="nachschlagen">Nachschlagen</button>
+    <button data-bereich="einstellungen">Einstellungen</button>
+  </nav>
+</header>
+
+<main>
+  <section class="ansicht" id="ansicht-liste">
+    <div class="werkzeug">
+      <div class="paar" id="ansichtWahl" role="group" aria-label="Ansicht">
+        <button id="modusWoche" aria-pressed="true">Woche</button>
+        <button id="modusTag" aria-pressed="false">Ein Tag</button>
+      </div>
+      <div class="paar" id="tagWahl" role="group" aria-label="Tag" hidden></div>
+      <button class="knopf" id="nurErwartet" aria-pressed="false" hidden>Nur erwartete</button>
+      <div class="woche" id="wochenNav">
+        <button class="pfeil" id="wocheZurueck" aria-label="Eine Woche zurück">‹</button>
+        <div class="kw" id="kwAnzeige"></div>
+        <button class="pfeil" id="wocheVor" aria-label="Eine Woche vor">›</button>
+        <button class="knopf" id="wocheHeute">Heute</button>
+      </div>
+      <div class="stand-heute" id="standHeute"></div>
+      <div class="naechste" id="naechste"></div>
+    </div>
+    <nav class="reiter" id="register" aria-label="Listen"></nav>
+    <div class="blatt">
+      <div class="blattkopf" id="blattkopf"></div>
+      <div class="rollen"><table id="liste"></table></div>
+    </div>
+  </section>
+
+  <section class="ansicht" id="ansicht-kinder" hidden>
+    <div class="titelzeile">
+      <h2>Kinder</h2>
+      <input class="suche" id="kinderSuche" type="search" placeholder="Name suchen" aria-label="Name suchen">
+      <div class="paar" id="kinderFilter" role="group" aria-label="Filter">
+        <button data-kfilter="alle" aria-pressed="true">Alle</button>
+        <button data-kfilter="ohne" aria-pressed="false">Ohne Zuordnung</button>
+        <button data-kfilter="zeiten" aria-pressed="false">Ohne Zeiten</button>
+      </div>
+      <button class="knopf" id="mehrfach" aria-pressed="false">Mehrere auswählen</button>
+      <button class="knopf haupt" id="kindNeu">Kind anlegen</button>
+    </div>
+    <div class="sammelleiste" id="sammelleiste" hidden>
+      <b id="sammelZahl">0 ausgewählt</b>
+      <label class="feld" style="flex-direction:row;align-items:center;gap:8px;color:var(--tinte)">Liste
+        <select id="sammelListe" aria-label="Liste"></select></label>
+      <button class="knopf" data-sammel="hinzu">Hinzufügen</button>
+      <button class="knopf" data-sammel="weg">Entfernen</button>
+      <button class="knopf gefahr" data-sammel="archiv">Ins Archiv</button>
+      <button class="knopf flach" data-sammel="aus">Auswahl aufheben</button>
+    </div>
+    <div class="blatt"><div class="rollen"><table class="kinder" id="kinderTabelle"></table></div></div>
+    <div id="archivBereich"></div>
+  </section>
+
+  <section class="ansicht nachschlag" id="ansicht-nachschlagen" hidden>
+    <div class="titelzeile">
+      <h2 id="nsTitel">Telefonliste</h2>
+      <div class="paar" role="group" aria-label="Liste">
+        <button data-ns="telefon" aria-pressed="true">Telefon</button>
+        <button data-ns="allergien" aria-pressed="false">Allergien &amp; Info</button>
+        <button data-ns="abholer" aria-pressed="false">Abholberechtigte</button>
+      </div>
+      <input class="suche" id="nsSuche" type="search" placeholder="Name suchen" aria-label="Name suchen">
+    </div>
+    <div class="blatt"><div class="rollen"><table id="nsTabelle"></table></div></div>
+  </section>
+
+  <section class="ansicht" id="ansicht-einstellungen" hidden>
+    <div class="titelzeile"><h2>Einstellungen</h2></div>
+
+    <div class="abschnitt">
+      <h3>So funktioniert's</h3>
+      <div class="innen">
+        <p>Kurz für alle, die neu dazukommen. Die App braucht kein Internet, und die Daten liegen nur auf diesem iPad.</p>
+        <dl class="anleitung">
+          <dt>Kästchen antippen</dt><dd>einmal = <b>da</b>, nochmal = <b>abgeholt</b> (die Uhrzeit wird mitgeschrieben), nochmal = wieder leer.</dd>
+          <dt>Auf die Uhrzeit tippen</dt><dd>öffnet den Tag dieses Kindes: andere Abholzeit für heute, Notiz („Oma holt ab“), oder <b>krank</b>, <b>fehlt</b>, <b>entschuldigt</b>.</dd>
+          <dt>Auf den Namen tippen</dt><dd>zeigt Telefonnummern, Abholberechtigte und Allergien. Die Nummer ist antippbar und wählt.</dd>
+          <dt>Wer heute fehlt</dt><dd>rutscht in der Tagesansicht ausgegraut ans Ende der Liste. Abgeholte bleiben an ihrem Platz, damit sich beim Abhaken nichts verschiebt.</dd>
+          <dt>⚠ neben dem Namen</dt><dd>heißt: Allergie oder Hinweis hinterlegt. Bitte ansehen.</dd>
+          <dt>Reiter oben</dt><dd>wechseln zwischen den Listen. <b>Jetzt noch da</b> zeigt über alle Listen hinweg, wer heute noch im Haus ist – die Kontrolle zum Feierabend.</dd>
+          <dt>Blau oder orange hinterlegt</dt><dd>Das Kind geht demnächst bzw. hätte längst abgeholt sein sollen.</dd>
+          <dt>Woche · Ein Tag</dt><dd>„Ein Tag“ zeigt nur den gewählten Tag und ist auf dem iPad meist übersichtlicher. Mit ‹ › blättert man durch die Wochen, „Heute“ springt zurück.</dd>
+          <dt>Kinder anlegen und ändern</dt><dd>oben im Bereich <b>Kinder</b>: Namen, Listen, Abholzeiten, Telefon. Wer geht, kommt ins Archiv und verschwindet von den Listen.</dd>
+          <dt>Einmal pro Woche sichern</dt><dd>Einstellungen → Sicherung → <b>Sicherung speichern</b>, Datei in die Dateien-App legen. Geht das iPad verloren, sind die Daten sonst weg.</dd>
+          <dt>Verschrieben?</dt><dd>Nach größeren Änderungen erscheint unten <b>Rückgängig</b>. Ältere Stände liegen unter Einstellungen → Sicherung → Frühere Stände.</dd>
+        </dl>
+      </div>
+    </div>
+
+    <div class="abschnitt">
+      <h3>Aufbau der Listen</h3>
+      <div class="innen">
+        <label class="aufbau"><input type="radio" name="aufbau" value="oesterfeld">
+          <span><b>Klassen A–C, Spätdienst und Ferien</b><small>wie die Mappe „aktuelle.xlsx“</small></span></label>
+        <label class="aufbau"><input type="radio" name="aufbau" value="klassen4">
+          <span><b>Klassen 1–4, ohne Spätdienst und Ferien</b><small>wie die Mappe „Klassen 1-4.xlsx“ – Klasse 4 rechnet wie jede andere Klasse</small></span></label>
+        <p>Beim Umstellen wird nichts gelöscht. Kinder, die beim Spätdienst stehen, erscheinen im anderen Aufbau auf Klasse 4 und umgekehrt – so ist es auch in den beiden Mappen angelegt.</p>
+      </div>
+    </div>
+
+    <div class="abschnitt">
+      <h3>Sicherung</h3>
+      <div class="innen">
+        <div>Letzte Sicherung: <span class="sicherstand" id="sicherStand">noch nie</span></div>
+        <p id="sicherText"></p>
+        <div class="reihe">
+          <button class="knopf haupt" id="sicherungSpeichern">Sicherung speichern</button>
+          <label class="knopf" for="sicherungDatei" style="display:inline-flex;align-items:center">Sicherung laden …</label>
+          <input type="file" id="sicherungDatei" class="unsichtbar" accept=".json,application/json,text/plain,application/octet-stream">
+        </div>
+        <p>Die Sicherung hat dasselbe Format wie <b>daten.json</b> des Windows-Programms und lässt sich dort öffnen und umgekehrt.</p>
+        <p>Beim Laden fragt die App, ob <b>alles</b> ersetzt werden soll oder nur <b>Kinder und Einstellungen</b>. Der zweite Weg ist für mehrere iPads gedacht: Die Kinder werden auf einem Gerät gepflegt und von dort verteilt, ohne die Häkchen des Tages auf den anderen Geräten zu überschreiben.</p>
+        <p id="speicherStatus"></p>
+        <div class="unterueberschrift" style="margin:6px 0 0">Frühere Stände auf diesem iPad</div>
+        <p>Die App legt jeden Tag automatisch einen Stand ab und behält die letzten 14 Tage, dazu jeden Stand vor dem Einlesen einer Mappe oder Sicherung. Das hilft bei versehentlichen Änderungen. Gegen einen Verlust des iPads hilft nur die Sicherungsdatei.</p>
+        <div id="staende"></div>
+        <div class="unterueberschrift" style="margin:6px 0 0">Alte Einträge aufräumen</div>
+        <p>Häkchen und Notizen älterer Tage werden nach dieser Zeit gelöscht. Namen, Telefonnummern und Zuordnungen bleiben davon unberührt. 0 bedeutet: alles behalten.</p>
+        <div class="reihe">
+          <label class="feld" style="flex-direction:row;align-items:center;gap:8px;color:var(--tinte)">Aufbewahren (Monate)
+            <input id="einstAufbewahrung" type="number" min="0" max="120" step="1" style="max-width:110px"></label>
+          <button class="knopf" id="jetztAufraeumen">Jetzt aufräumen</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="abschnitt">
+      <h3>Excel-Mappe übernehmen</h3>
+      <div class="innen">
+        <p>Liest <b>aktuelle.xlsx</b> oder <b>Klassen 1-4.xlsx</b> ein: Kinder mit Buchung, Klassen und Zeiten, Telefon, Allergien, Abholberechtigte, die Bezeichnungen der Listen und die Ferienzeiten. Welche Mappe es ist, erkennt die App selbst. Die Excel-Datei wird nur gelesen, nicht verändert, und nichts verlässt das iPad.</p>
+        <div class="reihe">
+          <label class="knopf haupt" for="mappeDatei" style="display:inline-flex;align-items:center">Excel-Mappe auswählen …</label>
+          <input type="file" id="mappeDatei" class="unsichtbar" accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet">
+        </div>
+      </div>
+    </div>
+
+    <div class="abschnitt">
+      <h3>Listen benennen</h3>
+      <div class="innen" style="padding-bottom:0"><p>Wie im Blatt „Einstellungen“ der Mappe. Die <b>Bezeichnung</b> steht auf dem Reiter, <b>Überschrift</b> und <b>Untertitel</b> am Bildschirm in einer Zeile über der Liste und auf dem Ausdruck in voller Größe. Leer lassen heißt: Vorgabe verwenden.</p>
+        <p>Nicht gebrauchte Listen lassen sich über <b>Anzeigen</b> abschalten – zum Beispiel Klasse C und Ferien. Der Reiter verschwindet dann, zugeordnete Kinder und ihre Zeiten bleiben gespeichert und sind sofort wieder da, wenn die Liste wieder angezeigt wird.</p></div>
+      <div class="rollen"><table class="einst" id="listenEinst"></table></div>
+    </div>
+
+    <div class="abschnitt" id="abschnittFerien">
+      <h3>Ferienzeiträume</h3>
+      <div class="innen" style="padding-bottom:0"><p>Vorgeschlagen sind die Schulferien in Baden-Württemberg für 2026/27 laut Kultusministerium. Bitte prüfen und die beweglichen Ferientage eurer Schule ergänzen. In diesen Wochen zeigt die Ferienliste den Namen und die Ferienwoche an, und die App öffnet gleich die Ferienliste.</p></div>
+      <div class="rollen"><table class="einst" id="ferienEinst"></table></div>
+      <div class="innen"><div class="reihe"><button class="knopf" id="zeitraumNeu">Zeitraum hinzufügen</button></div></div>
+    </div>
+
+    <div class="abschnitt">
+      <h3>Einrichtung</h3>
+      <div class="innen">
+        <div class="zwei">
+          <label class="feld">Name der Einrichtung<input id="einstEinrichtung"></label>
+          <label class="feld">Zusatz zur Legende (steht auf allen Wochenlisten)<input id="einstZusatz" placeholder="z. B. Bei Fragen: Frau Kraus, Raum 12"></label>
+        </div>
+        <div class="feld">Telefonspalten<div class="drei" id="einstTelefon"></div></div>
+        <label class="feld">Kinder hervorheben, die in den nächsten … Minuten gehen (0 = aus)
+          <input id="einstVorwarnung" type="number" min="0" max="240" step="5" style="max-width:160px"></label>
+        <div class="drei">
+          <label class="feld">Uhrzeiten zur Auswahl von<input id="einstVon" inputmode="numeric"></label>
+          <label class="feld">bis<input id="einstBis" inputmode="numeric"></label>
+          <label class="feld">im Abstand von (Minuten)<input id="einstSchritt" type="number" min="1" max="60" step="1"></label>
+        </div>
+      </div>
+    </div>
+
+    <div class="abschnitt">
+      <h3>Anzeige</h3>
+      <div class="innen">
+        <p>Gilt nur für dieses iPad und verändert keine Daten. Größere Schrift macht die Zeilen höher – hochkant passen dann weniger Kinder auf den Bildschirm. Der Ausdruck bleibt in Normalgröße und immer hell.</p>
+        <div class="feld">Schriftgröße
+          <div class="paar" id="schriftWahl" role="group" aria-label="Schriftgröße">
+            <button data-schrift="normal" aria-pressed="true">Normal</button>
+            <button data-schrift="gross" aria-pressed="false">Groß</button>
+            <button data-schrift="sehrgross" aria-pressed="false">Sehr groß</button>
+          </div></div>
+        <div class="feld">Helligkeit
+          <div class="paar" id="themaWahl" role="group" aria-label="Helligkeit">
+            <button data-thema="auto" aria-pressed="true">Wie das iPad</button>
+            <button data-thema="hell" aria-pressed="false">Hell</button>
+            <button data-thema="dunkel" aria-pressed="false">Dunkel</button>
+          </div></div>
+      </div>
+    </div>
+
+    <div class="abschnitt">
+      <h3>Zugang</h3>
+      <div class="innen">
+        <p id="pinText"></p>
+        <div class="reihe">
+          <button class="knopf" id="pinEinrichten">PIN einrichten</button>
+          <button class="knopf" id="pinEntfernen" hidden>PIN entfernen</button>
+          <button class="knopf" id="pinSperren" hidden>Jetzt sperren</button>
+        </div>
+        <p>Der PIN hält neugierige Blicke ab, wenn das iPad offen herumliegt, und sperrt die App auch von selbst, wenn sie länger als 15 Minuten im Hintergrund war. Er ist <b>keine Verschlüsselung</b>: Wer das entsperrte iPad in die Hand bekommt, kommt technisch weiterhin an die Daten. Den Gerätecode des iPads ersetzt er nicht, und in der Sicherungsdatei steht er nicht.</p>
+      </div>
+    </div>
+
+    <div class="abschnitt">
+      <h3>Auf dem iPad installieren</h3>
+      <div class="innen"><p id="installText">In Safari auf <b>Teilen</b> tippen, dann <b>„Zum Home-Bildschirm“</b>. Erst dann bleiben die Daten auch nach Wochen ohne Benutzung erhalten, und die App läuft ohne Internet.</p></div>
+    </div>
+
+    <div class="abschnitt">
+      <h3>Beispieldaten</h3>
+      <div class="innen">
+        <p>Lädt 30 erfundene Kinder zum Ausprobieren. Alles, was jetzt auf diesem iPad steht, wird dabei ersetzt. Der jetzige Stand wird vorher unter „Frühere Stände“ abgelegt.</p>
+        <div class="reihe"><button class="knopf gefahr" id="beispielZurueck">Beispieldaten laden</button></div>
+      </div>
+    </div>
+
+    <div class="abschnitt">
+      <h3>Alle Daten löschen</h3>
+      <div class="innen">
+        <p>Löscht auf diesem Gerät alle Kinder, Häkchen, Einträge, Einstellungen und früheren Stände – zum Beispiel bevor ein iPad weitergegeben wird. Sicherungsdateien in der Dateien-App bleiben erhalten. Das lässt sich nicht rückgängig machen; wer die Daten noch braucht, sichert vorher.</p>
+        <div class="reihe"><button class="knopf gefahr-voll" id="allesLoeschen">Alle Daten auf diesem Gerät löschen …</button></div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<dialog id="tagDialog"></dialog>
+<dialog id="kindDialog" class="breit"></dialog>
+<dialog id="infoDialog"></dialog>
+<dialog id="importDialog" class="breit"></dialog>
+<dialog id="startDialog"></dialog>
+<dialog id="einspielDialog"></dialog>
+<dialog id="pinDialog"></dialog>
+<div class="toast" id="toast" hidden></div>
+<div class="fehlerband" id="fehlerband" hidden></div>
+
+<script id="regeln">
+/* Reine Geschäftsregeln: keine Oberfläche, kein gespeicherter Stand. Dadurch kann
+   programm/tests/test_ipad_regeln.py sie mit Node prüfen – dieselben Regeln wie in
+   der Mappe und in programm/regeln.py. Wer hier etwas ändert, zieht dort nach. */
+const Regeln = (() => {
+  "use strict";
+  const TAGE=["Mo","Di","Mi","Do","Fr"];
+  const TAGE_LANG=["Montag","Dienstag","Mittwoch","Donnerstag","Freitag"];
+  const GRUPPEN=["a","b","c","spaet"];
+  const FERIENWOCHEN=["1","2","3","4","5","6"];
+  const ALLEIN="⌂", ABGEHOLT="Abg.";
+  const GRENZE_MO_DO=16*60, GRENZE_FR=12*60+25;   // Spätdienst: Mo–Do bis 16:00, Fr bis 12:25
+  const ZEIT_RE=/^\s*(\d{1,2})[:.](\d{2})\s*(.*?)\s*$/;
+  const SORT_MAP={"ä":"a","ö":"o","ü":"u","Ä":"a","Ö":"o","Ü":"u","ß":"ss","é":"e","è":"e","ê":"e","á":"a","à":"a","í":"i","ì":"i","ó":"o","ò":"o","ú":"u","ù":"u","ç":"c","Ç":"c"};
+  const BUCHUNGEN=[["Fr","Frühdienst",/^(fr|fd|früh|frueh|frühdienst|fruehdienst)$/i],["Sp","Spätdienst",/^(sp|sd|spät|spaet|spätdienst|spaetdienst)$/i],["Fe","Ferien",/^(fe|ferien)$/i]];
+
+  const hhmm=m=>String(Math.floor(m/60)).padStart(2,"0")+":"+String(m%60).padStart(2,"0");
+  function zeitTeile(t){
+    if(!t) return null;
+    const m=ZEIT_RE.exec(t); if(!m) return null;
+    const h=+m[1], mi=+m[2]; if(h>23||mi>59) return null;
+    return [h*60+mi,m[3]];
+  }
+  /* Matrix BF–BJ: eigene Spätdienstzeit, sonst die Zeit aus der Klasse, in der das Kind steht */
+  function spaetdienstZeit(k,tag){
+    const eigen=(k.gruppen.spaet.zeiten[tag]||"").trim();
+    if(eigen) return eigen;
+    for(const g of ["a","b","c"]) if(k.gruppen[g].aktiv) return (k.gruppen[g].zeiten[tag]||"").trim();
+    return "";
+  }
+  /* Spätdienst D5–L5: „e“ = entschuldigt */
+  function spaetEntschuldigt(text,tag){const t=zeitTeile(text);return !!t&&t[0]<=(tag===4?GRENZE_FR:GRENZE_MO_DO);}
+  function hatHinweis(k){return !!((k.allergien||"").trim()||(k.sonstiges||"").trim());}
+  function sortSchluessel(n){return [...n].map(z=>SORT_MAP[z]??z).join("").toLocaleLowerCase("de");}
+  function sortiert(kinder){return [...kinder].sort((a,b)=>sortSchluessel(a.name).localeCompare(sortSchluessel(b.name),"de")||a.name.localeCompare(b.name,"de"));}
+  function zeitraster(einst){
+    const r=(einst&&einst.zeitraster)||{}, von=zeitTeile(r.von), bis=zeitTeile(r.bis), s=Math.max(1,+r.schritt_min||15);
+    if(!von||!bis||bis[0]<von[0]) return [];
+    const out=[]; for(let m=von[0];m<=bis[0];m+=s) out.push(hhmm(m)); return out;
+  }
+
+  /* Buchung: Frühdienst, Spätdienst, Ferien – in den Listen als Fr, Sp, Fe.
+     Gespeichert als Text wie in der Mappe; Unbekanntes (z. B. „VGS“) bleibt erhalten. */
+  function buchungLesen(text){
+    const an=new Set(), rest=[];
+    for(const t of String(text||"").split(/[\s,;/+·]+/).filter(Boolean)){const b=BUCHUNGEN.find(([,,re])=>re.test(t));if(b)an.add(b[0]);else rest.push(t);}
+    return {an,rest:rest.join(" ")};
+  }
+  function buchungText(an,rest){return [...BUCHUNGEN.filter(([kz])=>an.has(kz)).map(([kz])=>kz),rest].filter(Boolean).join(" ");}
+  function buchungAnzeige(text){const b=buchungLesen(text);return buchungText(b.an,b.rest);}
+  /* Buchung und Listen gekoppelt (nur Klassen A–C): Sp ↔ Spätdienstliste, Fe ↔ Ferienhaken */
+  function koppeln(k){
+    const b=buchungLesen(k.buchung);
+    if(b.an.has("Sp")||k.gruppen.spaet.aktiv){b.an.add("Sp");k.gruppen.spaet.aktiv=true;}
+    if(b.an.has("Fe")||k.ferienHaken){b.an.add("Fe");k.ferienHaken=true;}
+    k.buchung=buchungText(b.an,b.rest);
+    return k;
+  }
+
+  /* Datum, ISO-Kalenderwoche wie in der Mappe über den Donnerstag */
+  function montag(d){const x=new Date(d.getFullYear(),d.getMonth(),d.getDate());x.setDate(x.getDate()-(x.getDay()+6)%7);return x;}
+  function plusTage(d,n){const x=new Date(d);x.setDate(x.getDate()+n);return x;}
+  function kw(d){const t=new Date(Date.UTC(d.getFullYear(),d.getMonth(),d.getDate()));t.setUTCDate(t.getUTCDate()+3-(t.getUTCDay()+6)%7);const j=new Date(Date.UTC(t.getUTCFullYear(),0,1));return Math.floor((t-j)/864e5/7)+1;}
+  const isoTag=d=>d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");
+  const ddmm=d=>String(d.getDate()).padStart(2,"0")+"."+String(d.getMonth()+1).padStart(2,"0")+".";
+  function wochentext(mo){const fr=plusTage(mo,4);return `KW ${kw(mo)} | Woche vom ${ddmm(mo)} bis ${ddmm(fr)}${fr.getFullYear()}`;}
+
+  return {TAGE,TAGE_LANG,GRUPPEN,FERIENWOCHEN,ALLEIN,ABGEHOLT,GRENZE_MO_DO,GRENZE_FR,BUCHUNGEN,
+    zeitTeile,hhmm,spaetdienstZeit,spaetEntschuldigt,hatHinweis,sortSchluessel,sortiert,zeitraster,
+    buchungLesen,buchungText,buchungAnzeige,koppeln,montag,plusTage,kw,isoTag,ddmm,wochentext};
+})();
+if (typeof module !== "undefined") module.exports = Regeln;
+</script>
+<script id="kern">
+/* Kern: Excel-Mappe lesen. Bewusst ohne Zugriff auf die Oberfläche, damit
+   programm/tests/test_ipad_import.py ihn mit Node gegen importer.py prüfen kann.
+   ZIP- und Zellcode stammen aus „Daten übernehmen.html“ – wer die Leseregeln
+   ändert, zieht importer.py, „Daten übernehmen.html“ und diesen Block gleich. */
+const ImportKern = (() => {
+  "use strict";
+  class Fehler extends Error {}
+
+  async function durchStrom(daten, strom) {
+    const antwort = new Response(new Blob([daten]).stream().pipeThrough(strom));
+    return new Uint8Array(await antwort.arrayBuffer());
+  }
+  const auspacken = (daten) => durchStrom(daten, new DecompressionStream("deflate-raw"));
+
+  async function zipLesen(puffer) {
+    const daten = new Uint8Array(puffer);
+    const sicht = new DataView(daten.buffer, daten.byteOffset, daten.byteLength);
+    let ende = -1;
+    for (let i = daten.length - 22; i >= 0 && i > daten.length - 66000; i--) {
+      if (sicht.getUint32(i, true) === 0x06054b50) { ende = i; break; }
+    }
+    if (ende < 0) throw new Fehler("Das ist keine Excel-Datei (.xlsx).");
+    if (typeof DecompressionStream === "undefined") {
+      throw new Fehler("Zum Einlesen von Excel-Dateien braucht dieses Gerät iPadOS 16.4 oder neuer.");
+    }
+    const anzahl = sicht.getUint16(ende + 10, true);
+    let zeiger = sicht.getUint32(ende + 16, true);
+    const teile = new Map();
+    for (let n = 0; n < anzahl; n++) {
+      if (sicht.getUint32(zeiger, true) !== 0x02014b50) throw new Fehler("Die Datei ist beschädigt.");
+      const verfahren = sicht.getUint16(zeiger + 10, true);
+      const packgroesse = sicht.getUint32(zeiger + 20, true);
+      const namenslaenge = sicht.getUint16(zeiger + 28, true);
+      const extra = sicht.getUint16(zeiger + 30, true);
+      const kommentar = sicht.getUint16(zeiger + 32, true);
+      const kopfstelle = sicht.getUint32(zeiger + 42, true);
+      const name = new TextDecoder().decode(daten.subarray(zeiger + 46, zeiger + 46 + namenslaenge));
+      const start = kopfstelle + 30 + sicht.getUint16(kopfstelle + 26, true) + sicht.getUint16(kopfstelle + 28, true);
+      const roh = daten.subarray(start, start + packgroesse);
+      teile.set(name, verfahren === 0 ? roh : await auspacken(roh));
+      zeiger += 46 + namenslaenge + extra + kommentar;
+    }
+    return teile;
+  }
+
+  // ------------------------------------------------------------- Layout ----
+  const MATRIX = "xl/worksheets/sheet1.xml";
+  const EINSTELLUNGEN = "xl/worksheets/sheet2.xml";
+  const FERIENWOCHEN = ["1", "2", "3", "4", "5", "6"];
+  const ERSTE_ZEILE = 5, LETZTE_ZEILE = 170, FERIEN_ERSTE_ZEILE = 5, FERIEN_PLAETZE = 48;
+  const GRUPPEN = {
+    a: ["C", ["D", "E", "F", "G", "H"]],
+    b: ["I", ["J", "K", "L", "M", "N"]],
+    c: ["O", ["P", "Q", "R", "S", "T"]],
+    spaet: ["U", ["V", "W", "X", "Y", "Z"]],
+  };
+  const FERIEN_SPALTE = "AA";   // AB–AF sind funktionslose Altlast
+  const TELEFON = ["AG", "AH", "AI", "AJ", "AK"];
+  const ABHOLER = ["AN", "AO", "AP", "AQ", "AR"];
+  const FERIEN_ZEITSPALTEN = ["E", "G", "I", "K", "M"];
+  const LISTEN = ["klasse_a", "klasse_b", "klasse_c", "spaetdienst"];   // Einstellungen Zeile 11–14
+  const TELEFON_VORGABE = ["Mutter", "Vater", "Festnetz", "Oma/Opa", "Sonstige"];
+  const ZEIT_FORMATE = new Set([18, 19, 20, 21, 45, 46, 47]);
+  const ZELLE = /<c r="([A-Z]+\d+)"([^>]*?)(?:\/>|>([\s\S]*?)<\/c>)/g;
+
+  // ---------------------------------------------------------- XML-Hilfen ----
+  const text = (bytes) => new TextDecoder("utf-8").decode(bytes);
+  function zerlege(ref) { const t = /^([A-Z]+)(\d+)$/.exec(ref); return [t[1], Number(t[2])]; }
+  function entkommen(s) {
+    return s.replace(/&#(\d+);/g, (_, n) => String.fromCodePoint(Number(n)))
+      .replace(/&#x([0-9a-fA-F]+);/g, (_, n) => String.fromCodePoint(parseInt(n, 16)))
+      .replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&quot;/g, '"').replace(/&apos;/g, "'")
+      .replace(/&amp;/g, "&");
+  }
+  /** Excel-Bruchteil eines Tages -> "14:25". Unlesbares bleibt, wie es ist. */
+  function alsUhrzeit(roh) {
+    const zahl = Number(roh);
+    if (!isFinite(zahl)) return roh;
+    const minuten = Math.round((zahl % 1) * 24 * 60);
+    return `${String(Math.floor(minuten / 60) % 24).padStart(2, "0")}:${String(minuten % 60).padStart(2, "0")}`;
+  }
+  function sharedStrings(teile) {
+    const roh = teile.get("xl/sharedStrings.xml");
+    if (!roh) return [];
+    return [...text(roh).matchAll(/<si>([\s\S]*?)<\/si>/g)].map((si) =>
+      [...si[1].matchAll(/<t[^>]*>([\s\S]*?)<\/t>/g)].map((t) => entkommen(t[1])).join(""));
+  }
+  function zeitstile(teile) {
+    const roh = teile.get("xl/styles.xml");
+    if (!roh) return new Set();
+    const inhalt = text(roh), eigene = new Set();
+    for (const m of inhalt.matchAll(/<numFmt[^>]*numFmtId="(\d+)"[^>]*formatCode="([^"]*)"/g)) {
+      if (m[2].toLowerCase().includes("h") && m[2].includes(":")) eigene.add(Number(m[1]));
+    }
+    const block = /<cellXfs[^>]*>([\s\S]*?)<\/cellXfs>/.exec(inhalt);
+    if (!block) return new Set();
+    const stile = new Set();
+    let nummer = 0;
+    for (const xf of block[1].matchAll(/<xf [^>]*\/>|<xf [^>]*>[\s\S]*?<\/xf>/g)) {
+      const kennung = Number((/numFmtId="(\d+)"/.exec(xf[0]) || [, 0])[1]);
+      if (ZEIT_FORMATE.has(kennung) || eigene.has(kennung)) stile.add(String(nummer));
+      nummer++;
+    }
+    return stile;
+  }
+  /** Alle fest eingetragenen Werte eines Blattes; Formelzellen werden übersprungen. */
+  function blattWerte(xml, texte, stile) {
+    const werte = new Map();
+    for (const [, ref, attr, inhalt] of xml.matchAll(ZELLE)) {
+      const rumpf = inhalt || "";
+      if (/<f[\s>/]/.test(rumpf)) continue;
+      const art = (/\st="(\w+)"/.exec(attr) || [])[1] || null;
+      let wert;
+      if (art === "inlineStr") {
+        wert = [...rumpf.matchAll(/<t[^>]*>([\s\S]*?)<\/t>/g)].map((t) => t[1]).join("");
+      } else {
+        const v = /<v>([\s\S]*?)<\/v>/.exec(rumpf);
+        if (!v) continue;
+        wert = v[1];
+        if (art === "s") wert = texte[Number(wert)] ?? "";
+        else if ((art === null || art === "n") && stile.has((/\ss="(\d+)"/.exec(attr) || [])[1])) wert = alsUhrzeit(wert);
+      }
+      wert = entkommen(wert);
+      if (wert.trim()) werte.set(ref, wert);
+    }
+    return werte;
+  }
+  /** Blattnamen in Reihenfolge der Mappe, mit Pfad zur Blattdatei. */
+  function blaetter(teile) {
+    const wb = teile.get("xl/workbook.xml"), rels = teile.get("xl/_rels/workbook.xml.rels");
+    if (!wb || !rels) return [];
+    const ziel = new Map();
+    for (const [eintrag] of text(rels).matchAll(/<Relationship\b[^>]*>/g)) {
+      const id = (/\bId="([^"]+)"/.exec(eintrag) || [])[1], t = (/\bTarget="([^"]+)"/.exec(eintrag) || [])[1];
+      if (id && t) ziel.set(id, t.startsWith("/") ? t.slice(1) : "xl/" + t);
+    }
+    return [...text(wb).matchAll(/<sheet\b[^>]*>/g)].map(([eintrag]) => ({
+      name: entkommen((/\bname="([^"]*)"/.exec(eintrag) || [])[1] || ""),
+      pfad: ziel.get((/\br:id="([^"]+)"/.exec(eintrag) || [])[1]),
+    }));
+  }
+
+  // -------------------------------------------------------------- Lesen ----
+  const istHaken = (t) => (t || "").trim().toLowerCase() === "x";
+  const fuenf = (liste) => (liste || []).concat(["", "", "", "", ""]).slice(0, 5);
+
+  function leseKinder(werte) {
+    const zeilen = new Map();
+    for (const [ref, inhalt] of werte) {
+      const [spalte, zeile] = zerlege(ref);
+      if (zeile < ERSTE_ZEILE || zeile > LETZTE_ZEILE) continue;
+      if (!zeilen.has(zeile)) zeilen.set(zeile, {});
+      zeilen.get(zeile)[spalte] = inhalt;
+    }
+    const kinder = [];
+    for (const zeile of [...zeilen.keys()].sort((a, b) => a - b)) {
+      const zelle = zeilen.get(zeile);
+      const name = (zelle.A || "").trim();
+      if (!name) continue;
+      const ferien = istHaken(zelle[FERIEN_SPALTE]);   // ein Haken für alle Ferienwochen
+      const kind = {
+        name, buchung: (zelle.B || "").trim(), gruppen: {}, ferien: {}, ferienHaken: ferien,
+        telefon: fuenf(TELEFON.map((s) => (zelle[s] || "").trim())),
+        allergien: (zelle.AL || "").trim(), sonstiges: (zelle.AM || "").trim(),
+        abholer: fuenf(ABHOLER.map((s) => (zelle[s] || "").trim())),
+      };
+      for (const [schluessel, [haken, tage]] of Object.entries(GRUPPEN)) {
+        kind.gruppen[schluessel] = { aktiv: istHaken(zelle[haken]), zeiten: fuenf(tage.map((s) => (zelle[s] || "").trim())) };
+      }
+      for (const w of FERIENWOCHEN) kind.ferien[w] = { aktiv: ferien, zeiten: fuenf([]) };
+      kinder.push(kind);
+    }
+    return kinder;
+  }
+
+  /** Zeile 5 eines Ferienblatts ist das erste Kind mit Ferienhaken in Matrix-Reihenfolge. */
+  function leseFerienzeiten(teile, texte, stile, kinder, pfade) {
+    const reihenfolge = kinder.filter((k) => k.ferienHaken);
+    const ergebnis = [];
+    if (!reihenfolge.length) return ergebnis;
+    for (const woche of FERIENWOCHEN) {
+      const roh = teile.get(pfade[woche]);
+      if (!roh) continue;
+      const mitZeiten = new Set();
+      for (const [ref, inhalt] of blattWerte(text(roh), texte, stile)) {
+        const [spalte, zeile] = zerlege(ref);
+        const tag = FERIEN_ZEITSPALTEN.indexOf(spalte);
+        if (tag < 0 || zeile < FERIEN_ERSTE_ZEILE) continue;
+        const platz = zeile - FERIEN_ERSTE_ZEILE;
+        if (platz >= reihenfolge.length) continue;
+        reihenfolge[platz].ferien[woche].zeiten[tag] = inhalt.trim();
+        if (inhalt.trim()) mitZeiten.add(platz);
+      }
+      if (mitZeiten.size) ergebnis.push({ woche, kinderMitZeiten: mitZeiten.size });
+    }
+    return ergebnis;
+  }
+
+  /** Liest eine Mappe (aktuelle.xlsx oder Klassen 1-4.xlsx) vollständig ein. Verändert nichts. */
+  async function leseMappe(puffer) {
+    const teile = await zipLesen(puffer);
+    if (!teile.has(MATRIX) || !teile.has(EINSTELLUNGEN)) {
+      throw new Fehler("Die Datei sieht nicht wie die Anwesenheitsliste aus – das Blatt „Matrix“ oder „Einstellungen“ fehlt.");
+    }
+    const texte = sharedStrings(teile), stile = zeitstile(teile);
+    const matrix = blattWerte(text(teile.get(MATRIX)), texte, stile);
+    const kopf = (ref) => (matrix.get(ref) || "").trim();
+    if (kopf("A4") !== "Name" || kopf("B4") !== "Buchung" || !/^In .+\?/.test(kopf("C4"))) {
+      throw new Fehler("Die Matrix ist anders aufgebaut als erwartet (Zeile 4 sollte mit „Name“, „Buchung“, „In A? (x)“ beginnen). Diese Mappe kann nicht übernommen werden.");
+    }
+    const liste = blaetter(teile), namen = liste.map((b) => b.name);
+    // „In 4? (x)“ in U4 bzw. ein Blatt „Klasse 4“ ohne Ferienblätter: die Mappe „Klassen 1-4“
+    const aufbau = /^In 4\?/.test(kopf("U4")) || (namen.includes("Klasse 4") && !namen.some((n) => /^Ferien \d$/.test(n)))
+      ? "klassen4" : "oesterfeld";
+    const kinder = leseKinder(matrix);
+    const hinweise = [];
+    let ferienBlaetter = [];
+    if (aufbau === "oesterfeld") {
+      const pfade = Object.fromEntries(FERIENWOCHEN.map((w) =>
+        [w, (liste.find((b) => b.name === "Ferien " + w) || {}).pfad || `xl/worksheets/sheet${6 + Number(w)}.xml`]));
+      ferienBlaetter = leseFerienzeiten(teile, texte, stile, kinder, pfade);
+      const zahl = kinder.filter((k) => k.ferienHaken).length;
+      if (zahl > FERIEN_PLAETZE) {
+        hinweise.push(`${zahl} Kinder haben den Ferienhaken, auf ein Ferienblatt passen aber nur ${FERIEN_PLAETZE}. Für die übrigen ${zahl - FERIEN_PLAETZE} standen in der Mappe keine Ferienzeiten.`);
+      }
+    }
+    const ohne = kinder.filter((k) => !Object.values(k.gruppen).some((g) => g.aktiv) && !(aufbau === "oesterfeld" && k.ferienHaken)).length;
+    if (ohne) hinweise.push(`${ohne} ${ohne === 1 ? "Kind steht" : "Kinder stehen"} in der Mappe auf keiner Liste. Sie werden trotzdem übernommen und lassen sich unter „Kinder“ zuordnen.`);
+
+    const einst = blattWerte(text(teile.get(EINSTELLUNGEN)), texte, stile);
+    const wert = (ref) => (einst.get(ref) || "").trim();
+    const tel = [27, 28, 29, 30, 31].map((z) => wert("B" + z));
+    const listen = {};
+    LISTEN.forEach((key, i) => {
+      listen[key] = { name: (liste[2 + i] && liste[2 + i].name) || "", titel: wert("B" + (11 + i)), untertitel: wert("C" + (11 + i)) };
+    });
+    listen.ferien = { name: "", titel: aufbau === "oesterfeld" ? wert("B15") : "", untertitel: "" };
+    return {
+      aufbau, kinder, ferienBlaetter, hinweise,
+      einstellungen: {
+        einrichtung: wert("B5") || "Österfeldschule",
+        zusatz_legende: wert("B34"),
+        telefon_spalten: tel.some(Boolean) ? tel.map((s, i) => s || TELEFON_VORGABE[i]) : [...TELEFON_VORGABE],
+        listen,
+      },
+    };
+  }
+
+  return { leseMappe, Fehler };
+})();
+if (typeof module !== "undefined") module.exports = ImportKern;
+</script>
+<script id="zusammen">
+"use strict";
+/* Zusammenführen: Wer wird beim erneuten Einlesen wiedererkannt, und welche Häkchen
+   bleiben stehen? Das ist die Stelle, an der still Daten verloren gehen könnten –
+   deshalb ohne Oberfläche und ohne gespeicherten Stand, damit
+   programm/tests/test_ipad_zusammen.py sie mit Node prüfen kann. */
+const Zusammen = (() => {
+
+  /** Ordnet die Kinder einer Mappe den vorhandenen zu – über den Namen, denn die
+   *  Mappe kennt keine Nummern. Gleiche Namen werden der Reihe nach verteilt.
+   *  @param bestand   Kinder, die auf dem Gerät stehen (mit id und aktiv)
+   *  @param mappe     Kinder aus der Mappe
+   *  @param schluessel Namensschlüssel (DIN 5007, aus den Regeln)
+   *  @returns {paare: Map(mappenKind -> bestandsKind), neu: [...], fehlen: [...], fehlenAktiv: [...]} */
+  function abgleich(bestand, mappe, schluessel) {
+    const offen = new Map();
+    for (const k of bestand) {
+      const s = schluessel(k.name || "");
+      if (!offen.has(s)) offen.set(s, []);
+      offen.get(s).push(k);
+    }
+    const paare = new Map(), neu = [];
+    for (const q of mappe) {
+      const liste = offen.get(schluessel(q.name || ""));
+      if (liste && liste.length) paare.set(q, liste.shift());
+      else neu.push(q);
+    }
+    const fehlen = [...offen.values()].flat();
+    return { paare, neu, fehlen, fehlenAktiv: fehlen.filter(k => k.aktiv) };
+  }
+
+  /** Räumt Häkchen, Notizen und Ferienzeiten weg, deren Kind es nicht mehr gibt.
+   *  Verändert den übergebenen Stand und gibt die Zahl der entfernten Häkchen zurück. */
+  function nurBekannte(stand) {
+    const ids = new Set(stand.daten.kinder.map(k => k.id));
+    let weg = 0;
+    for (const tag of Object.values(stand.eintraege || {}))
+      for (const liste of Object.values(tag))
+        for (const id of Object.keys(liste)) if (!ids.has(id)) { delete liste[id]; weg++; }
+    for (const tag of Object.values(stand.abwesend || {}))
+      for (const id of Object.keys(tag)) if (!ids.has(id)) delete tag[id];
+    for (const woche of Object.values(stand.ferienZeiten || {}))
+      for (const id of Object.keys(woche)) if (!ids.has(id)) delete woche[id];
+    for (const woche of Object.values(stand.ferienNicht || {}))
+      for (const id of Object.keys(woche)) if (!ids.has(id)) delete woche[id];
+    return weg;
+  }
+
+  return { abgleich, nurBekannte };
+})();
+if (typeof module !== "undefined") module.exports = Zusammen;
+</script>
+<script id="speicher">
+"use strict";
+/* Wie die Häkchen auf der Platte liegen. Früher stand alles in einem einzigen
+   Datensatz – ein Häkchen im Mai schrieb damit das ganze Schuljahr neu (gemessen:
+   5 MB pro Tipp bei 166 Kindern). Jetzt liegen die Einträge monatsweise, und ein
+   Tipp schreibt nur seinen Monat. Reine Funktionen, damit
+   programm/tests/test_ipad_speicher.py sie ohne Browser prüfen kann. */
+const Speicher = (() => {
+  const MONAT = (datum) => String(datum).slice(0, 7);      // "2026-09-07" -> "2026-09"
+
+  /** Zerlegt Einträge und Abwesenheiten eines Standes in Monatspakete. */
+  function nachMonaten(stand) {
+    const teile = {};
+    const dazu = (datum, feld, wert) => {
+      const m = MONAT(datum);
+      (teile[m] ??= { eintraege: {}, abwesend: {} })[feld][datum] = wert;
+    };
+    for (const [datum, wert] of Object.entries(stand.eintraege || {})) dazu(datum, "eintraege", wert);
+    for (const [datum, wert] of Object.entries(stand.abwesend || {})) dazu(datum, "abwesend", wert);
+    return teile;
+  }
+
+  /** Setzt die Monatspakete wieder zu Einträgen und Abwesenheiten zusammen. */
+  function ausMonaten(teile) {
+    const eintraege = {}, abwesend = {};
+    for (const teil of Object.values(teile || {})) {
+      if (!teil) continue;
+      Object.assign(eintraege, teil.eintraege || {});
+      Object.assign(abwesend, teil.abwesend || {});
+    }
+    return { eintraege, abwesend };
+  }
+
+  /** Stand für einen Sicherheitsschnappschuss: Kinder und Einstellungen vollständig,
+   *  Häkchen nur aus den letzten `tage` Tagen. Genau dafür sind die Stände da –
+   *  „heute hat jemand etwas verdorben“ –, und es hält die Datenbank klein. */
+  function beschnitten(stand, tage, heute) {
+    const grenze = new Date(new Date(heute + "T12:00").getTime() - tage * 86400000)
+      .toISOString().slice(0, 10);
+    const klein = { ...stand, eintraege: {}, abwesend: {}, fenster: { von: grenze, bis: heute } };
+    for (const [datum, wert] of Object.entries(stand.eintraege || {})) if (datum >= grenze) klein.eintraege[datum] = wert;
+    for (const [datum, wert] of Object.entries(stand.abwesend || {})) if (datum >= grenze) klein.abwesend[datum] = wert;
+    return klein;
+  }
+
+  /** Holt einen Schnappschuss zurück. Kinder, Einstellungen und Ferienzeiten kommen
+   *  aus dem Schnappschuss; bei den Häkchen wird nur sein Zeitfenster ersetzt, ältere
+   *  Tage bleiben stehen. Ältere Schnappschüsse ohne Fenster ersetzen wie früher alles. */
+  function ausSchnappschuss(jetzt, schnapp) {
+    const neu = { ...schnapp };
+    delete neu.fenster; delete neu.grund;
+    if (!schnapp.fenster) return neu;
+    const { von, bis } = schnapp.fenster;
+    const misch = (alt, teil) => {
+      const raus = {};
+      for (const [datum, wert] of Object.entries(alt || {})) if (datum < von || datum > bis) raus[datum] = wert;
+      return Object.assign(raus, teil || {});
+    };
+    neu.eintraege = misch(jetzt.eintraege, schnapp.eintraege);
+    neu.abwesend = misch(jetzt.abwesend, schnapp.abwesend);
+    return neu;
+  }
+
+  return { MONAT, nachMonaten, ausMonaten, beschnitten, ausSchnappschuss };
+})();
+if (typeof module !== "undefined") module.exports = Speicher;
+</script>
+<script>
+"use strict";
+/* ------------------------------------------------------------------
+   Regeln – die reinen Funktionen stehen im Block <script id="regeln">
+   darüber, damit sie ohne Browser geprüft werden können.
+------------------------------------------------------------------ */
+const {TAGE,TAGE_LANG,GRUPPEN,FERIENWOCHEN,ALLEIN,ABGEHOLT,BUCHUNGEN,zeitTeile,hhmm,spaetdienstZeit,
+  spaetEntschuldigt,hatHinweis,sortiert,buchungLesen,buchungText,buchungAnzeige,koppeln,
+  montag,plusTage,kw,isoTag,ddmm,wochentext}=Regeln;
+const zeitraster=()=>Regeln.zeitraster(state.daten.einstellungen);
+const LISTEN=[
+  {key:"klasse_a",name:"Klasse A",gruppe:"a"},
+  {key:"klasse_b",name:"Klasse B",gruppe:"b"},
+  {key:"klasse_c",name:"Klasse C",gruppe:"c"},
+  {key:"spaetdienst",name:"Spätdienst",gruppe:"spaet"},
+  {key:"ferien",name:"Ferien",ferien:true}
+];
+function aktive(){return state.daten.kinder.filter(k=>k.aktiv&&k.name.trim());}
+/* Ferien: ein Haken wie Matrix AA – das Kind steht in allen Ferienwochen auf der Ferienliste */
+function gruppeFuerListe(k,l){return l.ferien?{aktiv:!!k.ferienHaken}:k.gruppen[l.gruppe];}
+function kinderFuerListe(l){return sortiert(aktive().filter(k=>gruppeFuerListe(k,l).aktiv));}
+/* Ferienzeiten hängen an der Kalenderwoche, nicht an „Ferienblatt 1–6“ */
+function zeitFuer(k,l,tag,mo){
+  if(l.key==="spaetdienst"&&!modus4()) return spaetdienstZeit(k,tag);
+  if(l.ferien) return (ferienZeitenVon(mo??ui.montag,k.id)?.[tag]||"").trim();
+  return (k.gruppen[l.gruppe].zeiten[tag]||"").trim();
+}
+/* Bezeichnungen – wie Blatt „Einstellungen“ der Mappe */
+/* Aufbau: „oesterfeld“ = Klassen A–C + Spätdienst + Ferien (aktuelle.xlsx)
+           „klassen4“   = Klassen 1–4 ohne Spätdienst und Ferien (Klassen 1-4.xlsx) – Klasse 4 liegt in der Spätdienst-Spalte U
+           und rechnet wie jede andere Klasse */
+const modus4=()=>state.daten.einstellungen.aufbau==="klassen4";
+const NAMEN4={klasse_a:"Klasse 1",klasse_b:"Klasse 2",klasse_c:"Klasse 3",spaetdienst:"Klasse 4"};
+const standardName=l=>modus4()?(NAMEN4[l.key]||l.name):l.name;
+const alleListen=()=>modus4()?LISTEN.filter(l=>!l.ferien):LISTEN;
+/* Nicht gebrauchte Listen (oft Klasse C und Ferien) lassen sich ausblenden.
+   Das versteckt nur den Reiter – zugeordnete Kinder und ihre Zeiten bleiben stehen. */
+const sichtbareListen=()=>{const s=alleListen().filter(l=>!listenEinst(l).aus); return s.length?s:alleListen();};
+function listenEinst(l){return state.daten.einstellungen.listen[l.key]??={};}
+function listeName(l){return (listenEinst(l).name||"").trim()||standardName(l);}
+function listeTitel(l){return (listenEinst(l).titel||"").trim()||"ANWESENHEITSLISTE";}
+function listeUntertitel(l){return (listenEinst(l).untertitel||"").trim()||"Kategorie: "+listeName(l);}
+const nameGruppe=g=>listeName(LISTEN.find(l=>l.gruppe===g));
+const nameFerien=()=>listeName(LISTEN.find(l=>l.ferien));
+
+/* ------------------------------------------------------------------
+   Speicher
+------------------------------------------------------------------ */
+const SPEICHER_KEY="anwesenheit.prototyp.v2";
+/* Schulferien Baden-Württemberg 2026/27 laut Kultusministerium – bewegliche Ferientage legt jede Schule selbst fest */
+const FERIEN_BW=[
+  {name:"Sommerferien",von:"2026-07-30",bis:"2026-09-12"},
+  {name:"Herbstferien",von:"2026-10-26",bis:"2026-10-31"},
+  {name:"Weihnachtsferien",von:"2026-12-23",bis:"2027-01-09"},
+  {name:"Osterferien",von:"2027-03-30",bis:"2027-04-03"},
+  {name:"Pfingstferien",von:"2027-05-18",bis:"2027-05-29"},
+  {name:"Sommerferien",von:"2027-07-29",bis:"2027-09-11"}
+];
+let state;
+const leereGruppe=()=>({aktiv:false,zeiten:["","","","",""]});
+function leeresKind(){
+  return {id:crypto.randomUUID?crypto.randomUUID():"k"+Date.now()+Math.random().toString(16).slice(2),
+    name:"",buchung:"",aktiv:true,
+    gruppen:Object.fromEntries(GRUPPEN.map(g=>[g,leereGruppe()])),
+    ferien:Object.fromEntries(FERIENWOCHEN.map(w=>[w,leereGruppe()])),
+    ferienHaken:false,
+    telefon:["","","","",""],allergien:"",sonstiges:"",abholer:["","","","",""]};
+}
+function standardEinstellungen(){
+  return {einrichtung:"Österfeldschule",aufbau:"oesterfeld",woche_global:"",auto_datum:true,listen:{},
+    telefon_spalten:["Mutter","Vater","Festnetz","Oma/Opa","Sonstige"],zusatz_legende:"",
+    zeitraster:{von:"12:25",bis:"17:25",schritt_min:15},vorwarnung_min:30,aufbewahrung_monate:12,
+    ferien_zeitraeume:FERIEN_BW.map(z=>({...z}))};
+}
+function normalisieren(roh){
+  const f5=a=>[...(a||[]).map(x=>x==null?"":String(x)),"","","","",""].slice(0,5);
+  const gr=g=>({aktiv:!!(g&&g.aktiv),zeiten:f5(g&&g.zeiten)});
+  const e=Object.assign(standardEinstellungen(),roh.einstellungen||{});
+  e.zeitraster=Object.assign({von:"12:25",bis:"17:25",schritt_min:15},e.zeitraster||{});
+  e.listen=e.listen||{};
+  if(!Array.isArray(e.ferien_zeitraeume)) e.ferien_zeitraeume=FERIEN_BW.map(z=>({...z}));
+  e.vorwarnung_min=Number.isFinite(+e.vorwarnung_min)?Math.max(0,Math.min(240,+e.vorwarnung_min)):30;
+  e.aufbewahrung_monate=Number.isFinite(+e.aufbewahrung_monate)?Math.max(0,Math.min(120,+e.aufbewahrung_monate)):12;
+  const vorgabe=standardEinstellungen().telefon_spalten;
+  e.telefon_spalten=f5(e.telefon_spalten).map((s,i)=>s||vorgabe[i]);
+  const kinder=(roh.kinder||[]).map(k=>Object.assign(leeresKind(),{
+    id:k.id||leeresKind().id,name:k.name||"",buchung:k.buchung||"",aktiv:k.aktiv!==false,
+    gruppen:Object.fromEntries(GRUPPEN.map(g=>[g,gr((k.gruppen||{})[g])])),
+    ferien:Object.fromEntries(FERIENWOCHEN.map(w=>[w,gr((k.ferien||{})[w])])),
+    ferienHaken:typeof k.ferienHaken==="boolean"?k.ferienHaken:FERIENWOCHEN.some(w=>k.ferien?.[w]?.aktiv),
+    telefon:f5(k.telefon),allergien:k.allergien||"",sonstiges:k.sonstiges||"",abholer:f5(k.abholer)}));
+  if(e.aufbau!=="klassen4") kinder.forEach(koppeln);
+  return {version:1,einstellungen:e,kinder};
+}
+/* Gespeichert wird in der IndexedDB des iPads – sie fasst auch nach Jahren alle Häkchen.
+   Dazu ein Stand pro Tag (14 Tage) und einer vor jedem Einlesen. localStorage nur als Notlösung. */
+const DB_NAME="anwesenheit", DB_TABELLE="stand", HAUPT="haupt", FERIEN_SATZ="ferien";
+const SCHNAPP_TAGE=14;        // so weit zurück reichen die täglichen Stände (sie werden auch nur 14 Tage aufbewahrt)
+const TAGESSTAND_ABSTAND=15*60000;
+let dbZusage=null, ohneDb=false, speicherUhr=null;
+/* Was seit dem letzten Schreiben angefasst wurde – nur das wandert auf die Platte */
+let schmutz={monate:new Set(),ferien:false,alles:true};
+let letzterStamm=null, bekannteMonate=new Set(), letzterTagesStand=0, letzterStandRef=null;
+const merkeMonat=d=>{if(d)schmutz.monate.add(Speicher.MONAT(d));};
+const allesSchmutzig=()=>{schmutz={monate:new Set(),ferien:true,alles:true};letzterStamm=null;};
+function db(){
+  dbZusage??=new Promise((ok,nein)=>{
+    try{const r=indexedDB.open(DB_NAME,1);r.onupgradeneeded=()=>r.result.createObjectStore(DB_TABELLE);r.onsuccess=()=>ok(r.result);r.onerror=()=>nein(r.error);}
+    catch(f){nein(f);}
+  });
+  return dbZusage;
+}
+async function dbTun(modus,auftrag){
+  const d=await db();
+  return new Promise((ok,nein)=>{
+    const t=d.transaction(DB_TABELLE,modus), r=auftrag(t.objectStore(DB_TABELLE));
+    t.oncomplete=()=>ok(r&&r.result); t.onerror=()=>nein(t.error); t.onabort=()=>nein(t.error);
+  });
+}
+const dbLesen=k=>dbTun("readonly",s=>s.get(k));
+const dbSchreiben=(k,w)=>dbTun("readwrite",s=>s.put(w,k));
+const dbLoeschen=k=>dbTun("readwrite",s=>s.delete(k));
+const dbSchluessel=()=>dbTun("readonly",s=>s.getAllKeys());
+function vervollstaendigen(s){
+  s.daten=normalisieren(s.daten);
+  for(const k of ["eintraege","abwesend","ferienZeiten","ferienNicht"]) s[k]??={};
+  s.letzteSicherung??=null; s.beispiel=!!s.beispiel; s.pin=s.pin||null; delete s.grund;
+  return s;
+}
+let umzugNoetig=false;   // alter Datensatz gefunden, in dem noch alles zusammenlag
+async function laden(){
+  let s=null;
+  try{
+    const stamm=await dbLesen(HAUPT);
+    if(stamm&&stamm.daten){
+      s={...stamm};
+      if(stamm.eintraege||stamm.abwesend||stamm.ferienZeiten){
+        umzugNoetig=true;                                  // alte Fassung: alles in einem Satz
+      }else{
+        const teile={};
+        for(const k of (await dbSchluessel()).map(String)){
+          if(!k.startsWith("monat-")) continue;
+          const teil=await dbLesen(k);
+          if(teil){teile[k.slice(6)]=teil;bekannteMonate.add(k.slice(6));}
+        }
+        Object.assign(s,Speicher.ausMonaten(teile));
+        const f=await dbLesen(FERIEN_SATZ)||{};
+        s.ferienZeiten=f.ferienZeiten||{}; s.ferienNicht=f.ferienNicht||{};
+      }
+    }
+  }catch(f){ ohneDb=true; }
+  if(!s){ try{const r=localStorage.getItem(SPEICHER_KEY);if(r){s=JSON.parse(r);umzugNoetig=true;}}catch(e){} }   // Umzug aus dem Prototyp
+  return s&&s.daten?vervollstaendigen(s):null;
+}
+/* Einmaliger Umzug in die monatsweise Ablage. Erst die neuen Sätze schreiben, den
+   alten Hauptsatz zuletzt ersetzen – bricht etwas ab, liegt der alte noch vollständig da. */
+async function umziehen(){
+  if(ohneDb||!umzugNoetig||!state) return;
+  try{
+    allesSchmutzig(); await jetztSpeichern(); umzugNoetig=false;
+  }catch(e){}
+}
+function speichern(){clearTimeout(speicherUhr);speicherUhr=setTimeout(jetztSpeichern,300);}
+const stammTeil=()=>({version:2,daten:state.daten,letzteSicherung:state.letzteSicherung,beispiel:state.beispiel,pin:state.pin});
+async function jetztSpeichern(){
+  clearTimeout(speicherUhr); speicherUhr=null;
+  if(!state) return;
+  // Wurde der ganze Stand ausgetauscht (Sicherung, Mappe, Rückgängig, Löschen …),
+  // ist er ein neues Objekt – dann muss alles neu geschrieben werden.
+  if(state!==letzterStandRef){ allesSchmutzig(); letzterStandRef=state; }
+  if(ohneDb){
+    try{localStorage.setItem(SPEICHER_KEY,JSON.stringify(state));}catch(e){zeigeHinweis("Speichern ist fehlgeschlagen – der Speicher des iPads ist voll oder gesperrt.");}
+    return;
+  }
+  try{
+    // Erst die Einträge, zuletzt der Hauptsatz: Bricht etwas dazwischen ab, steht im
+    // alten Hauptsatz noch alles drin, und der nächste Start zieht einfach neu um.
+    const monate=Speicher.nachMonaten(state);
+    const zu=schmutz.alles?new Set([...Object.keys(monate),...bekannteMonate]):schmutz.monate;
+    for(const m of zu){
+      if(monate[m]){ await dbSchreiben("monat-"+m,monate[m]); bekannteMonate.add(m); }
+      else if(bekannteMonate.has(m)){ await dbLoeschen("monat-"+m); bekannteMonate.delete(m); }
+    }
+    if(schmutz.ferien||schmutz.alles) await dbSchreiben(FERIEN_SATZ,{ferienZeiten:state.ferienZeiten,ferienNicht:state.ferienNicht});
+    const stammText=JSON.stringify(stammTeil());
+    if(stammText!==letzterStamm){ await dbSchreiben(HAUPT,JSON.parse(stammText)); letzterStamm=stammText; }
+    schmutz={monate:new Set(),ferien:false,alles:false};
+    await tagesStand(false);
+  }catch(f){zeigeHinweis("Speichern ist fehlgeschlagen: "+(f&&f.message||f));}
+}
+/* Ein Stand je Tag – beschnitten und höchstens alle 15 Minuten, statt bei jedem Häkchen */
+async function tagesStand(sofort){
+  if(ohneDb||!state||state.beispiel||!state.daten.kinder.length) return;
+  if(!sofort&&Date.now()-letzterTagesStand<TAGESSTAND_ABSTAND) return;
+  letzterTagesStand=Date.now();
+  const heute=isoTag(new Date());
+  try{ await dbSchreiben("tag-"+heute,Speicher.beschnitten(state,SCHNAPP_TAGE,heute)); }catch(e){}
+}
+/* Legt den jetzigen Stand ab, bevor etwas ihn ersetzt. Die Kopie entsteht sofort.
+   Dieser Stand bleibt absichtlich VOLLSTÄNDIG: Er ist der Rettungsanker vor dem
+   Einlesen einer Mappe oder Sicherung, und „Alles ersetzen“ löscht auch alte Tage.
+   Ein beschnittener Stand könnte die dann nicht mehr zurückbringen. */
+function vorherSichern(grund){
+  if(ohneDb||!state||state.beispiel||!state.daten.kinder.length) return Promise.resolve();
+  const kopie=JSON.parse(JSON.stringify(state)); kopie.grund=grund;
+  return dbSchreiben("vor-"+new Date().toISOString(),kopie).catch(()=>{});
+}
+async function aufraeumen(){
+  if(ohneDb) return;
+  try{
+    const ks=(await dbSchluessel()).map(String);
+    const weg=[...ks.filter(k=>k.startsWith("tag-")).sort().slice(0,-14),...ks.filter(k=>k.startsWith("vor-")).sort().slice(0,-5)];
+    for(const k of weg) await dbLoeschen(k);
+  }catch(e){}
+}
+document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="hidden"&&speicherUhr)jetztSpeichern();});
+window.addEventListener("pagehide",()=>{if(speicherUhr)jetztSpeichern();});
+
+/* eintraege[datum][liste][kindId] = {da, weg, wegUm, zeit, notiz}; abwesend[datum][kindId] = "krank" | "fehlt" | "entschuldigt" */
+function eintrag(datum,listeKey,kindId,anlegen){
+  if(!anlegen) return state.eintraege[datum]?.[listeKey]?.[kindId]||null;
+  merkeMonat(datum);   // angelegt wird nur, wenn gleich etwas geändert wird
+  const e=state.eintraege; e[datum]??={}; e[datum][listeKey]??={};
+  return e[datum][listeKey][kindId]??={da:false,weg:false,wegUm:"",zeit:"",notiz:""};
+}
+const abwesend=(datum,id)=>state.abwesend[datum]?.[id]||"";
+function setzeAbwesend(datum,id,wert){merkeMonat(datum);state.abwesend[datum]??={};if(wert)state.abwesend[datum][id]=wert;else delete state.abwesend[datum][id];}
+
+/* Ferien: ferienZeiten[montag][kindId] = [Mo..Fr]; ferienNicht[montag][kindId] = true („kommt diese Woche nicht“) */
+const ferienZeitenVon=(mo,id)=>state.ferienZeiten[isoTag(mo)]?.[id];
+function setzeFerienZeit(mo,id,t,wert){schmutz.ferien=true;const w=state.ferienZeiten[isoTag(mo)]??={};(w[id]??=["","","","",""])[t]=wert;}
+const istNicht=(mo,id)=>!!state.ferienNicht[isoTag(mo)]?.[id];
+function setzeNicht(mo,id,wert){schmutz.ferien=true;const w=state.ferienNicht[isoTag(mo)]??={};if(wert)w[id]=true;else delete w[id];}
+function zeitraumFuerWoche(mo){
+  const von=isoTag(mo), bis=isoTag(plusTage(mo,4));
+  return (state.daten.einstellungen.ferien_zeitraeume||[]).find(z=>z.von&&z.bis&&z.von<=bis&&z.bis>=von)||null;
+}
+function ferienWoche(zr,mo){
+  const a=montag(new Date(zr.von+"T12:00")), b=montag(new Date(zr.bis+"T12:00"));
+  return [Math.round((mo-a)/6048e5)+1, Math.round((b-a)/6048e5)+1];
+}
+const jetztHHMM=()=>{const d=new Date();return hhmm(d.getHours()*60+d.getMinutes());};
+const standVon=(en,ab)=>ab?"":en?.weg?"weg":en?.da?"da":"";
+function wegWort(k,l,t,en){const z=zeitTeile((en&&en.zeit)||zeitFuer(k,l,t));return z&&z[1]===ALLEIN?"gegangen":"abgeholt";}
+/* Tippen auf das Kästchen: leer → ✓ da → ○ abgeholt/gegangen → leer */
+function weiterSchalten(en,datum){
+  if(!en.da){en.da=true;en.weg=false;en.wegUm="";}
+  else if(!en.weg){en.weg=true;en.wegUm=datum===isoTag(new Date())?jetztHHMM():"";}
+  else{en.da=false;en.weg=false;en.wegUm="";}
+}
+/* Laut Mappe entschuldigt (nur Spätdienst, und nur solange nichts anderes eingetragen ist) */
+function istEntschuldigt(k,l,t,en){return l.key==="spaetdienst"&&!modus4()&&spaetEntschuldigt((en&&en.zeit)||zeitFuer(k,l,t),t);}
+
+/* ------------------------------------------------------------------
+   Beispieldaten (erfunden)
+------------------------------------------------------------------ */
+function beispielStand(aufbau=state?.daten?.einstellungen?.aufbau||"oesterfeld"){
+  const vier=aufbau==="klassen4";
+  let s=20260911; const zufall=()=>((s=(s*1103515245+12345)%2147483648)/2147483648);
+  const wahl=a=>a[Math.floor(zufall()*a.length)];
+  const vor=["Amira","Bela","Dario","Noah","Mila","Edda","Fiete","Gesa","Hugo","Leon","Ilvy","Kalle","Liv","Malte","Ole","Pia","Quirin","Finn","Romy","Sila","Ella","Tamme","Jule","Ulla","Nele","Oskar","Vito","Jakob","Zeynep","Milan"];
+  const nach=["Albers","Brinkmann","Çelik","Dreher","Engel","Fuchs","Gerdes","Hoffmann","Imhof","Jansen","Kowalski","Lange","Meyer","Nowak","Özdemir","Peters","Quandt","Asmussen","Schulz","Tiedemann","Ullrich","Vogt","Bartels","Yılmaz","Ziegler","Becker","Krüger","Möller","Arslan","Clausen"];
+  const moDo=["14:25","14:40","15:00","15:25","15:40","16:00"], fr=["12:25","12:40","13:00","13:25","13:40"], spaet=["16:30","16:45","17:00","17:15","17:25"];
+  const abholer=["Oma Gisela","Opa Heinz","Tante Sevgi","Nachbarin Frau Kraus","Bruder Tim (16)","Onkel Marek","Babysitterin Lea"];
+  const kinder=[];
+  for(let i=0;i<30;i++){
+    const k=leeresKind(); k.name=`${vor[i]} ${nach[i]}`;
+    const klasse=vier?["a","b","c","spaet"][i%4]:["a","b","c"][i%3], art=()=>zufall()<.35?ALLEIN:ABGEHOLT;
+    k.gruppen[klasse].aktiv=true;
+    k.gruppen[klasse].zeiten=[0,1,2,3].map(()=>`${wahl(moDo)} ${art()}`).concat(`${wahl(fr)} ${art()}`);
+    if(!vier&&(i%3===1||i%7===0)){
+      k.gruppen.spaet.aktiv=true;
+      // Spätdienstkinder werden meist später abgeholt; an einzelnen Tagen früher – dann sind sie entschuldigt
+      k.gruppen[klasse].zeiten=[0,1,2,3].map(()=>zufall()<.7?`${wahl(spaet)} ${ABGEHOLT}`:`${wahl(moDo)} ${art()}`)
+        .concat(`${wahl(fr)} ${art()}`);
+    }
+    if(!vier&&(i<12||i%5===0)) k.ferienHaken=true;
+    k.buchung=buchungText(new Set([...(zufall()<.3?["Fr"]:[]),...(k.gruppen.spaet.aktiv&&!vier?["Sp"]:[]),...(k.ferienHaken?["Fe"]:[])]),"");
+    const nr=()=>"01"+wahl(["51","52","57","60","76"])+" "+String(Math.floor(1e6+zufall()*8e6));
+    k.telefon=[nr(),zufall()<.8?nr():"",zufall()<.4?"0209 "+String(Math.floor(1e5+zufall()*8e5)):"",zufall()<.3?nr():"",""];
+    if(i===2) k.allergien="Nussallergie – Notfallset im Ranzen";
+    if(i===9) k.allergien="Milchzucker-Unverträglichkeit";
+    if(i===17) k.allergien="Bienen- und Wespengift – Notfallset im Büro";
+    if(i===5) k.sonstiges="Trägt eine Brille, beim Sport ablegen";
+    if(i===22) k.sonstiges="Nur an die eingetragenen Abholberechtigten übergeben";
+    k.abholer=[wahl(abholer),zufall()<.5?wahl(abholer):"","","",""];
+    kinder.push(k);
+  }
+  const st={daten:{version:1,einstellungen:{...standardEinstellungen(),aufbau},kinder},eintraege:{},abwesend:{},ferienZeiten:{},ferienNicht:{},letzteSicherung:null,beispiel:true};
+  const heute=new Date(), mo=montag(heute), wd=(heute.getDay()+6)%7, bis=Math.min(4,wd);
+  const vorher=state; state=st;
+  const fl=LISTEN.find(l=>l.ferien), inFerien=!vier&&!!zeitraumFuerWoche(mo);
+  // Ferienzeiten für die umliegenden Ferienwochen – manche Kinder ohne Zeit, wie auf den Ferienblättern
+  for(let w=-2;w<=1;w++){
+    const m=plusTage(mo,7*w); if(!zeitraumFuerWoche(m)) continue;
+    for(const k of kinder) if(k.ferienHaken&&zufall()>.15){
+      state.ferienZeiten[isoTag(m)]??={};
+      state.ferienZeiten[isoTag(m)][k.id]=[0,1,2,3,4].map(()=>zufall()<.1?"":`${wahl(["13:00","14:00","15:00","15:30","16:00"])} ${zufall()<.25?ALLEIN:ABGEHOLT}`);
+    }
+  }
+  const tickListen=inFerien?[fl]:LISTEN.slice(0,4);
+  if(inFerien){const fk=kinderFuerListe(fl);if(fk[4])setzeNicht(mo,fk[4].id,true);}
+  for(let t=0;t<=bis;t++){
+    const d=isoTag(plusTage(mo,t)), quote=(t<wd)?0.95:0.6;
+    for(const l of tickListen) for(const k of kinderFuerListe(l)){
+      if((l.ferien&&istNicht(mo,k.id))||istEntschuldigt(k,l,t,null)||zufall()>=quote) continue;
+      const en=eintrag(d,l.key,k.id,true); en.da=true;
+      if(t<wd||zufall()<.35){en.weg=true;const z=zeitTeile(zeitFuer(k,l,t,mo));en.wegUm=z?hhmm(z[0]+Math.floor(zufall()*6)):"";}
+    }
+  }
+  const l0=tickListen[0], ka=kinderFuerListe(l0).filter(k=>!(l0.ferien&&istNicht(mo,k.id)));
+  if(ka[3]) for(let t=0;t<=Math.min(1,bis);t++){const d=isoTag(plusTage(mo,t));setzeAbwesend(d,ka[3].id,"krank");for(const l of LISTEN){const en=state.eintraege[d]?.[l.key]?.[ka[3].id];if(en){en.da=false;en.weg=false;}}}
+  if(ka[5]) eintrag(isoTag(plusTage(mo,bis)),l0.key,ka[5].id,true).notiz="Arzttermin, Mutter holt früher ab";
+  if(ka[7]) eintrag(isoTag(plusTage(mo,Math.max(0,bis-1))),l0.key,ka[7].id,true).notiz="Oma Gisela holt ab";
+  state=vorher;
+  return st;
+}
+
+/* ------------------------------------------------------------------
+   Anzeige
+------------------------------------------------------------------ */
+const ui={bereich:"liste",liste:"klasse_a",montag:montag(new Date()),modus:"woche",tag:null,ns:"telefon",kinderSuche:"",nsSuche:"",kinderFilter:"alle",nurErwartet:false,auswahlModus:false,auswahl:new Set(),schrift:"normal",thema:"auto",legende:false};
+try{const u=JSON.parse(localStorage.getItem(SPEICHER_KEY+".ui")||"{}");if(u.liste)ui.liste=u.liste;if(u.schrift)ui.schrift=u.schrift;if(u.thema)ui.thema=u.thema;ui.legende=!!u.legende;if(u.modus)ui.modus=u.modus;else if(window.innerWidth<800)ui.modus="tag";}catch(e){}
+// „Jetzt noch da“ wird nicht gemerkt – beim nächsten Start soll die gewohnte Liste offen sein
+function merkeUi(){try{localStorage.setItem(SPEICHER_KEY+".ui",JSON.stringify({liste:ui.liste==="jetzt"?(ui.vorherigeListe||"klasse_a"):ui.liste,modus:ui.modus,schrift:ui.schrift,thema:ui.thema,legende:ui.legende}));}catch(e){}}
+/* Schriftgröße und Zeichenerklärung hängen am Gerät, nicht an den Daten – deshalb im localStorage */
+function setzeSchrift(){
+  document.body.classList.toggle("gross",ui.schrift==="gross");
+  document.body.classList.toggle("sehrgross",ui.schrift==="sehrgross");
+  for(const b of document.querySelectorAll("#schriftWahl [data-schrift]")) b.setAttribute("aria-pressed",b.dataset.schrift===ui.schrift);
+}
+/* „Wie das iPad“ lässt die Systemeinstellung entscheiden (prefers-color-scheme),
+   sonst schreibt data-theme die Wahl fest. */
+function setzeThema(){
+  const w=ui.thema;
+  if(w==="hell"||w==="dunkel") document.documentElement.dataset.theme=(w==="dunkel"?"dark":"light");
+  else delete document.documentElement.dataset.theme;
+  const dunkel=w==="dunkel"||(w==="auto"&&matchMedia("(prefers-color-scheme: dark)").matches);
+  document.querySelector('meta[name="theme-color"]')?.setAttribute("content",dunkel?"#0b0e11":"#333333");
+  for(const b of document.querySelectorAll("#themaWahl [data-thema]")) b.setAttribute("aria-pressed",b.dataset.thema===w);
+}
+setzeSchrift(); setzeThema();
+matchMedia("(prefers-color-scheme: dark)").addEventListener?.("change",()=>{if(ui.thema==="auto")setzeThema();});
+const $=s=>document.querySelector(s);
+const nachOben=()=>{const m=document.querySelector("main"); if(m) m.scrollTop=0;};   // gescrollt wird der Inhalt, nicht das Fenster
+const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const telHref=n=>"tel:"+n.replace(/[^\d+]/g,"");
+const HAUS='<svg class="haus" viewBox="0 0 14 14" role="img" aria-label="geht alleine"><path d="M1.5 6.8 7 1.8l5.5 5" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/><rect x="3.2" y="6.6" width="7.6" height="5.8" fill="none" stroke="currentColor" stroke-width="1.5"/></svg>';
+const DREIECK='<svg class="dreieck" viewBox="0 0 22 20" role="img" aria-label="Allergie oder Hinweis beachten"><path d="M11 1.5 20.5 18.5h-19z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M11 7.5v5.5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><circle cx="11" cy="15.6" r="1.2" fill="currentColor"/></svg>';
+const HAKEN='<svg class="h" viewBox="0 0 22 22" aria-hidden="true"><path d="M4.5 11.5 9 16l8.5-9.5" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+const KREIS='<svg class="k" viewBox="0 0 22 22" aria-hidden="true"><circle cx="11" cy="11" r="6.5" fill="none" stroke="currentColor" stroke-width="3"/></svg>';
+function zeitHtml(text,geaendert){
+  const t=zeitTeile(text);
+  if(!t) return text?`<span class="zeit ${geaendert?"geaendert":""}">${esc(text)}</span>`:'<span class="strich">–</span>';
+  const art=t[1]===ALLEIN?HAUS:t[1]?`<span class="art">${esc(t[1])}</span>`:"";
+  return `<span class="zeit ${geaendert?"geaendert":""}">${hhmm(t[0])} ${art}</span>`;
+}
+const aktuelleListe=()=>sichtbareListen().find(l=>l.key===ui.liste)||sichtbareListen()[0]||LISTEN[0];
+function heuteIndex(){const h=new Date();if(isoTag(montag(h))!==isoTag(ui.montag))return -1;const i=(h.getDay()+6)%7;return i<5?i:-1;}
+
+function renderBereich(){
+  document.querySelectorAll(".bereiche button").forEach(b=>b.setAttribute("aria-current",b.dataset.bereich===ui.bereich));
+  document.querySelectorAll(".ansicht").forEach(s=>s.hidden=s.id!=="ansicht-"+ui.bereich);
+  $("#einrichtungKopf").textContent=state.daten.einstellungen.einrichtung;
+  renderBand();
+  ({liste:renderListe,kinder:renderKinder,nachschlagen:renderNachschlagen,einstellungen:renderEinstellungen})[ui.bereich]();
+}
+
+/* Wer ist heute da und noch nicht abgeholt? Über alle Listen, jedes Kind einmal –
+   ein Kind kann zugleich in seiner Klasse und im Spätdienst offen sein. */
+function offeneHeute(){
+  const d=isoTag(new Date()), gefunden=new Map();
+  for(const l of sichtbareListen()){
+    for(const k of kinderFuerListe(l)){
+      if(abwesend(d,k.id)) continue;
+      const en=eintrag(d,l.key,k.id,false);
+      if(!en||!en.da||en.weg) continue;
+      const eintragung=gefunden.get(k.id)||{kind:k,listen:[]};
+      eintragung.listen.push(l); gefunden.set(k.id,eintragung);
+    }
+  }
+  return [...gefunden.values()];
+}
+function renderRegister(){
+  const reiter=sichtbareListen().map(l=>`${l.ferien?'<span class="luecke" aria-hidden="true"></span>':""}<button data-liste="${l.key}" aria-pressed="${l.key===ui.liste}">${esc(listeName(l))}<small>${kinderFuerListe(l).length}</small></button>`).join("");
+  $("#register").innerHTML=reiter+`<span class="luecke" aria-hidden="true"></span>
+    <button data-liste="jetzt" aria-pressed="${ui.liste==="jetzt"}">Jetzt noch da<small>${offeneHeute().length}</small></button>`;
+}
+function renderListe(){
+  renderRegister();
+  if(ui.liste==="jetzt") return renderJetzt();
+  $("#ansichtWahl").hidden=false; $("#wochenNav").hidden=false;
+  const l=aktuelleListe(), alleKinder=kinderFuerListe(l), hi=heuteIndex(), mo=ui.montag, fr=plusTage(mo,4), e=state.daten.einstellungen;
+  // Spätdienst: „nur erwartete“ gilt immer für einen Tag – die Frage lautet „wer kommt heute?“
+  const spaetListe=l.key==="spaetdienst"&&!modus4();
+  const tagFokus=ui.modus==="tag"?(ui.tag??(hi>=0?hi:0)):(hi>=0?hi:0);
+  const entschuldigtAn=(k,t)=>{
+    const en=eintrag(isoTag(plusTage(mo,t)),l.key,k.id,false);
+    return !en?.da&&!en?.weg&&istEntschuldigt(k,l,t,en);
+  };
+  const entschuldigtAmTag=spaetListe?alleKinder.filter(k=>entschuldigtAn(k,tagFokus)).length:0;
+  const irgendwannEntschuldigt=spaetListe&&alleKinder.some(k=>[0,1,2,3,4].some(t=>entschuldigtAn(k,t)));
+  const filterAktiv=spaetListe&&ui.nurErwartet&&ui.modus==="tag";
+  const alle=filterAktiv?alleKinder.filter(k=>!entschuldigtAn(k,tagFokus)):alleKinder;
+  const nicht=l.ferien?alle.filter(k=>istNicht(mo,k.id)):[];
+  let kinder=alle.filter(k=>!nicht.includes(k));
+  const erwartetKnopf=$("#nurErwartet");
+  erwartetKnopf.hidden=!spaetListe||(!irgendwannEntschuldigt&&!ui.nurErwartet);
+  erwartetKnopf.textContent=filterAktiv?`Alle zeigen (${alleKinder.length})`
+    :`Nur erwartete ${TAGE[tagFokus]} (${alleKinder.length-entschuldigtAmTag})`;
+  erwartetKnopf.setAttribute("aria-pressed",filterAktiv);
+  const zr=l.ferien?zeitraumFuerWoche(mo):null;
+  $("#kwAnzeige").innerHTML=`<b>KW ${kw(mo)}</b><span>${ddmm(mo)} bis ${ddmm(fr)}${fr.getFullYear()}</span>`;
+  $("#modusWoche").setAttribute("aria-pressed",ui.modus==="woche");
+  $("#modusTag").setAttribute("aria-pressed",ui.modus==="tag");
+  if(ui.tag===null) ui.tag=hi>=0?hi:0;
+  const tw=$("#tagWahl"); tw.hidden=ui.modus!=="tag";
+  tw.innerHTML=TAGE.map((t,i)=>`<button data-tag="${i}" aria-pressed="${i===ui.tag}">${t}</button>`).join("");
+
+  const leg=[`<span>${HAUS} geht alleine</span>`,`<span>Abg. wird abgeholt</span>`,`<span style="color:var(--warn)">${DREIECK}</span><span style="margin-left:-12px">Allergie/Hinweis beachten</span>`,
+    `<span><i class="mini da">${HAKEN}</i> da</span>`,`<span><i class="mini weg">${KREIS}</i> abgeholt / gegangen</span>`];
+  if(l.key==="spaetdienst"&&!modus4()) leg.push(`<span><i class="mini e">e</i> entschuldigt (geht Mo–Do bis 16:00, Fr bis 12:25)</span>`);
+  leg.push(`<span>Buchung: ${modus4()?"Fr = Frühdienst":"Fr = Frühdienst · Sp = Spätdienst · Fe = Ferien"}</span>`);
+  // Immer sichtbar bleibt, was sich ändert; die Zeichen selbst lassen sich einklappen
+  const zeile=[`<button class="knopf flach" id="legendeAn" aria-expanded="${ui.legende}" aria-controls="legende">${ui.legende?"Legende ausblenden":"Legende"}</button>`,
+    `<span><b>Kinder gesamt: ${kinder.length}</b></span>`];
+  zeile.push(`<span class="nebenbei">${l.ferien?'<button class="knopf flach" data-vorwoche>Zeiten aus der Vorwoche übernehmen</button>':""}<button class="knopf flach" data-drucken>Drucken</button></span>`);
+  if(e.zusatz_legende.trim()) zeile.push(`<span class="zusatz">${esc(e.zusatz_legende)}</span>`);
+  if(l.ferien&&!zr) zeile.push(`<span class="zusatz">Diese Woche liegt in keinem eingetragenen Ferienzeitraum (Einstellungen → Ferienzeiträume).</span>`);
+  let kwText=wochentext(mo);
+  if(zr){const [n,g]=ferienWoche(zr,mo);kwText=`${zr.name} · Woche ${n} von ${g} | ${kwText}`;}
+  // Am Bildschirm eine Zeile, auf dem Ausdruck der gewohnte gestapelte Kopf –
+  // Überschrift und Untertitel kommen in beiden Fällen aus den Einstellungen.
+  const tagKopf=ui.modus==="tag"?`<span class="datum">${TAGE_LANG[ui.tag]}, ${ddmm(plusTage(mo,ui.tag))}${ui.tag===hi?" · heute":""}</span>`:"";
+  $("#blattkopf").innerHTML=`<div class="nurdruck"><h1>${esc(listeTitel(l))}</h1><div class="einr">${esc(e.einrichtung)}</div>
+      <div class="unter">${esc(listeUntertitel(l))}</div><div class="kwtext">${esc(kwText)}</div></div>
+    <div class="kopfzeile"><span class="titel">${esc(listeTitel(l))}</span><span class="unter">${esc(listeUntertitel(l))}</span>
+      <span class="rechts">${tagKopf}<span class="kwtext">${esc(kwText)}</span></span></div>
+    <div class="legendezeile">${zeile.join("")}</div>
+    <div class="legende" id="legende" ${ui.legende?"":"hidden"}>${leg.join("")}</div>`;
+
+  const tage=ui.modus==="tag"?[ui.tag]:[0,1,2,3,4];
+  const einTag=ui.modus==="tag";
+  // Wer heute gar nicht kommt, steht am Ende – das ist morgens entschieden und ändert sich nicht mehr.
+  // Abgeholte bleiben bewusst an ihrem alphabetischen Platz, sonst wandert die Liste beim Abhaken.
+  const tagDatum=einTag?isoTag(plusTage(mo,ui.tag)):null;
+  if(einTag) kinder=[...kinder.filter(k=>!abwesend(tagDatum,k.id)),...kinder.filter(k=>abwesend(tagDatum,k.id))];
+  const tab=$("#liste"); tab.className=einTag?"tagmodus":"woche-tabelle";
+  // In der Tagesansicht steht das Kästchen vorn und Zeit samt Stand rechts – eine Zeile je Kind
+  let h=`<thead><tr><th>Nr.</th>${einTag?'<th aria-label="Haken"></th>':""}<th class="links">Name</th><th aria-label="Hinweis"></th>${einTag?'<th class="links">Notiz</th>':""}`;
+  for(const t of tage) h+=`<th class="${t===hi?"heute":""}">${einTag?TAGE_LANG[t]:TAGE[t]}<small>${t===hi?"heute · ":""}${ddmm(plusTage(mo,t))}</small></th>`;
+  h+=`<th class="buchung">Buchung</th></tr></thead><tbody>`;
+  const spalten=4+tage.length+(einTag?2:0);
+  if(!alle.length) h+=`<tr><td colspan="${spalten}" style="text-align:center;color:var(--grau);height:110px">Auf dieser Liste steht noch kein Kind. Zuordnen lässt es sich unter „Kinder“.</td></tr>`;
+  kinder.forEach((k,i)=>{
+    // Uhrzeit von heute, wenn das Kind heute noch erwartet wird – für die Hervorhebung
+    let minuteHeute="";
+    if(hi>=0&&tage.includes(hi)){
+      const d=isoTag(plusTage(mo,hi)), en=eintrag(d,l.key,k.id,false), ab=abwesend(d,k.id);
+      const tz=zeitTeile((en&&en.zeit)||zeitFuer(k,l,hi));
+      const zaehlt=tz&&!ab&&!(en&&en.weg)&&(!(istEntschuldigt(k,l,hi,en))||(en&&en.da));
+      if(zaehlt) minuteHeute=tz[0];
+    }
+    const kaesten=[], zellen=[], notizen=[]; let ruht=false;
+    for(const t of tage){
+      const d=isoTag(plusTage(mo,t)), en=eintrag(d,l.key,k.id,false), ab=abwesend(d,k.id);
+      const plan=zeitFuer(k,l,t), neu=en&&en.zeit, stand=standVon(en,ab), entsch=!ab&&istEntschuldigt(k,l,t,en);
+      if(einTag&&ab) ruht=true;
+      let inhalt=ab?`<span class="status">${esc(ab)}</span>`:neu?`${zeitHtml(neu,true)}<span class="durch">${esc(plan||"ohne Zeit")}</span>`:zeitHtml(plan,false);
+      if(stand==="weg") inhalt+=`<span class="klein">${wegWort(k,l,t,en)}${en.wegUm?" "+en.wegUm:""}</span>`;
+      // In der Tagesansicht steht die Notiz in einer eigenen Spalte – dort ist Platz dafür
+      if(en&&en.notiz&&!einTag) inhalt+=`<span class="notiz">${esc(en.notiz)}</span>`;
+      if(einTag) notizen.push(`<td class="notizfeld"><button class="notizknopf" data-zelle="${k.id}" data-t="${t}" aria-label="${esc(k.name)}: Notiz${en&&en.notiz?" ändern":" hinzufügen"}">${
+        en&&en.notiz?esc(en.notiz):'<span class="leer">Notiz …</span>'}</button></td>`);
+      if(t===hi) inhalt+=`<span class="bald-info"></span>`;
+      const standText={"":entsch?"entschuldigt":"leer",da:"da",weg:wegWort(k,l,t,en)}[stand];
+      const kasten=`<button class="box ${entsch?"entsch":""}" data-haken="${k.id}" data-t="${t}" data-stand="${stand}" aria-label="${esc(k.name)}, ${TAGE_LANG[t]}: ${standText}" ${ab?"disabled":""}>${HAKEN}${KREIS}</button>`;
+      const eintragKnopf=`<button class="eintrag" data-zelle="${k.id}" data-t="${t}" aria-label="${esc(k.name)}, ${TAGE_LANG[t]}: eintragen">${inhalt}</button>`;
+      const klassen=`tag ${einTag?"zelle-tag":""} ${t===hi?"heute":""} ${entsch&&!stand?"entsch":""} ${stand==="weg"?"fertig":""}`;
+      kaesten.push(`<td class="kast">${kasten}</td>`);
+      zellen.push(`<td class="${klassen}"><div class="zelle">${einTag?"":kasten}${eintragKnopf}</div></td>`);
+    }
+    h+=`<tr class="${ruht?"ruht":""}" data-minute="${minuteHeute}"><td class="nr">${i+1}</td>${einTag?kaesten[0]:""}`
+      +`<td class="name"><button data-info="${k.id}">${esc(k.name)}</button></td>`
+      +`<td class="hinweis">${hatHinweis(k)?`<button data-info="${k.id}">${DREIECK}</button>`:""}</td>`
+      +notizen.join("")+zellen.join("")+`<td class="buchung">${esc(buchungAnzeige(k.buchung))}</td></tr>`;
+  });
+  nicht.forEach(k=>{
+    h+=`<tr class="nicht"><td class="nr"></td>${einTag?'<td class="kast"></td>':""}<td class="name"><button data-info="${k.id}">${esc(k.name)}</button></td><td class="hinweis"></td>
+      <td class="nicht-zelle" colspan="${tage.length+(einTag?1:0)}">kommt diese Woche nicht <button class="knopf flach" data-kommt="${k.id}">kommt doch</button></td><td class="buchung">${esc(buchungAnzeige(k.buchung))}</td></tr>`;
+  });
+  tab.innerHTML=h+"</tbody>";
+
+  const spalteHeute=tage.indexOf(hi);
+  markierungen=[];
+  if(spalteHeute>=0){
+    for(const tr of tab.querySelectorAll("tbody tr[data-minute]")){
+      const minute=Number(tr.dataset.minute), zelle=tr.querySelectorAll("td.tag")[spalteHeute];
+      if(Number.isFinite(minute)&&tr.dataset.minute!==""&&zelle) markierungen.push({tr,zelle,minute});
+    }
+  }
+  frischeMarkierung();
+
+  const ts=ui.modus==="tag"?ui.tag:hi;
+  if(ts>=0){
+    const d=isoTag(plusTage(mo,ts)); let da=0,abgeholt=0,fehlen=0,entsch=0;
+    for(const k of kinder){
+      if(abwesend(d,k.id)){fehlen++;continue;}
+      const en=eintrag(d,l.key,k.id,false);
+      if(en?.da){da++;if(en.weg)abgeholt++;} else if(istEntschuldigt(k,l,ts,en)) entsch++;
+    }
+    const erwartet=kinder.length-fehlen-entsch;
+    $("#standHeute").innerHTML=`${TAGE_LANG[ts]}, ${ddmm(plusTage(mo,ts))}: ${da} von ${erwartet} da · ${abgeholt} abgeholt${fehlen?` · ${fehlen} ${fehlen===1?"fehlt":"fehlen"}`:""}${entsch?` · ${entsch} entschuldigt`:""}<br><b>Noch hier: ${da-abgeholt}</b>`;
+  } else $("#standHeute").textContent="";
+}
+
+/* „Jetzt noch da“: die Abschlusskontrolle über alle Listen hinweg, immer für heute */
+function renderJetzt(){
+  const heute=new Date(), d=isoTag(heute), e=state.daten.einstellungen;
+  $("#ansichtWahl").hidden=true; $("#wochenNav").hidden=true;
+  $("#tagWahl").hidden=true; $("#nurErwartet").hidden=true;
+  const offen=offeneHeute().map(o=>{
+    const zeit=o.listen.map(l=>{const en=eintrag(d,l.key,o.kind.id,false); return (en&&en.zeit)||zeitFuer(o.kind,l,wochentag(heute),montag(heute));}).find(z=>zeitTeile(z))||"";
+    return {...o,zeit,minute:zeitTeile(zeit)?.[0] ?? 99999};
+  }).sort((a,b)=>a.minute-b.minute||Regeln.sortSchluessel(a.kind.name).localeCompare(Regeln.sortSchluessel(b.kind.name),"de"));
+  $("#blattkopf").innerHTML=`<div class="kopfzeile"><span class="titel">Jetzt noch da</span>
+      <span class="unter">alle Listen zusammen</span>
+      <span class="rechts"><span class="datum">${heute.toLocaleDateString("de-DE",{weekday:"long"})} ${ddmm(heute)}</span></span></div>
+    <div class="legendezeile"><span><b>${offen.length} ${offen.length===1?"Kind ist":"Kinder sind"} noch hier</b></span>
+      <span class="nebenbei"><button class="knopf flach" data-drucken>Drucken</button></span>
+      <span class="zusatz">Antippen trägt das Kind auf allen Listen als abgeholt ein.</span></div>`;
+  const tab=$("#liste"); tab.className="tagmodus jetzt-tabelle";
+  let h=`<thead><tr><th>Nr.</th><th aria-label="Haken"></th><th class="links">Name</th><th aria-label="Hinweis"></th><th class="links">Liste</th><th>Geht um</th></tr></thead><tbody>`;
+  if(!offen.length) h+=`<tr><td colspan="6" style="text-align:center;color:var(--grau);height:120px">Alle Kinder sind abgeholt oder gegangen.</td></tr>`;
+  offen.forEach((o,i)=>{
+    const k=o.kind, listen=o.listen.map(l=>esc(listeName(l))).join(" · ");
+    h+=`<tr data-minute="${o.minute<99999?o.minute:""}"><td class="nr">${i+1}</td>
+      <td class="kast"><button class="box" data-jetzt="${k.id}" data-stand="da" aria-label="${esc(k.name)} ist abgeholt">${HAKEN}${KREIS}</button></td>
+      <td class="name"><button data-info="${k.id}">${esc(k.name)}</button></td>
+      <td class="hinweis">${hatHinweis(k)?`<button data-info="${k.id}">${DREIECK}</button>`:""}</td>
+      <td class="listen">${listen}</td>
+      <td class="tag zelle-tag"><div class="zelle"><button class="eintrag" data-zelle="${k.id}" data-t="${wochentag(heute)}" data-liste="${o.listen[0].key}" aria-label="${esc(k.name)}: eintragen">${o.zeit?zeitHtml(o.zeit,false):'<span class="klein">ohne Zeit</span>'}<span class="bald-info"></span></button></div></td></tr>`;
+  });
+  tab.innerHTML=h+"</tbody>";
+  markierungen=[];
+  for(const tr of tab.querySelectorAll("tbody tr[data-minute]")){
+    const minute=Number(tr.dataset.minute), zelle=tr.querySelector("td.tag");
+    if(Number.isFinite(minute)&&tr.dataset.minute!==""&&zelle) markierungen.push({tr,zelle,minute});
+  }
+  frischeMarkierung();
+  $("#standHeute").innerHTML=`${heute.toLocaleDateString("de-DE",{weekday:"long"})}, ${ddmm(heute)}<br><b>Noch hier: ${offen.length}</b>`;
+}
+/* Mo=0 … Fr=4; am Wochenende 0, damit die Ansicht trotzdem etwas zeigt */
+function wochentag(datum){const i=(datum.getDay()+6)%7; return i<5?i:0;}
+/* Das Kind hat das Haus verlassen – auf allen Listen, auf denen es heute offen steht */
+function jetztAbgeholt(id){
+  const d=isoTag(new Date()), o=offeneHeute().find(x=>x.kind.id===id);
+  if(!o) return;
+  merkeStand();
+  for(const l of o.listen){const en=eintrag(d,l.key,id,true); en.weg=true; en.wegUm=jetztHHMM();}
+  speichern(); renderListe();
+  zeigeHinweis(`${o.kind.name} ist abgeholt.`,true);
+}
+
+/* Hervorhebung: Wer heute demnächst geht, fällt beim Blick auf die Liste auf.
+   Frischt sich von selbst auf, ohne dass jemand etwas antippen muss. */
+let markierungen=[];
+let kindReihe=[];   // Reihenfolge der Kinderliste – dadurch lässt sich im Fenster blättern
+function frischeMarkierung(){
+  const jetzt=new Date(), m=jetzt.getHours()*60+jetzt.getMinutes();
+  const vor=Math.max(0,+state.daten.einstellungen.vorwarnung_min||0);
+  let naechste=null;
+  for(const {tr,zelle,minute} of markierungen){
+    const diff=minute-m, feld=zelle.querySelector(".bald-info");
+    tr.classList.remove("bald","faellig");
+    if(feld) feld.textContent="";
+    if(diff<0&&diff>=-120){
+      tr.classList.add("faellig");
+      if(feld) feld.textContent=`seit ${-diff} Min. fällig`;
+    } else if(vor&&diff>=0&&diff<=vor){
+      tr.classList.add("bald");
+      if(feld) feld.textContent=diff===0?"geht jetzt":`in ${diff} Min.`;
+      if(!naechste||diff<naechste.diff) naechste={diff,minute};
+    }
+  }
+  const zeile=$("#naechste");
+  if(zeile){
+    const wer=naechste?markierungen.filter(x=>x.minute===naechste.minute).length:0;
+    zeile.innerHTML=naechste
+      ? `Als Nächstes <b>${hhmm(naechste.minute)}</b>: ${wer} ${wer===1?"Kind":"Kinder"} (${naechste.diff===0?"jetzt":"in "+naechste.diff+" Min."})`
+      : "";
+  }
+}
+let heutigerTag=isoTag(new Date());
+setInterval(()=>{
+  if(document.visibilityState!=="visible") return;
+  const jetzt=isoTag(new Date());
+  if(jetzt!==heutigerTag){            // über Mitternacht offen geblieben
+    const warAktuell=isoTag(ui.montag)===isoTag(montag(new Date(heutigerTag+"T12:00")));
+    heutigerTag=jetzt;
+    if(warAktuell){ui.montag=montag(new Date());ui.tag=null;}
+    if(ui.bereich==="liste") renderListe(); else renderBereich();
+    return;
+  }
+  if(ui.bereich==="liste") frischeMarkierung();
+},20000);
+document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="visible"&&ui.bereich==="liste")frischeMarkierung();});
+
+/* Eintragen für einen Tag */
+/* lKey wird nur aus „Jetzt noch da“ übergeben – dort gilt immer die heutige Woche */
+function oeffneTag(kindId,t,lKey){
+  const k=state.daten.kinder.find(x=>x.id===kindId), l=(lKey&&LISTEN.find(x=>x.key===lKey))||aktuelleListe();
+  const mo=lKey?montag(new Date()):ui.montag, d=isoTag(plusTage(mo,t)), dlg=$("#tagDialog");
+  const zeichne=()=>{
+    const en=eintrag(d,l.key,k.id,false)||{da:false,weg:false,wegUm:"",zeit:"",notiz:""}, ab=abwesend(d,k.id), plan=zeitFuer(k,l,t);
+    const tz=zeitTeile(en.zeit||plan), jetzt=tz?hhmm(tz[0]):"", art=tz?(tz[1]||ABGEHOLT):ABGEHOLT;
+    const raster=zeitraster(); if(jetzt&&!raster.includes(jetzt)){raster.push(jetzt);raster.sort();}
+    const entsch=!ab&&istEntschuldigt(k,l,t,en);
+    dlg.innerHTML=`<div class="dkopf"><div><h2>${esc(k.name)}</h2><p>${TAGE_LANG[t]}, ${ddmm(plusTage(mo,t))} · ${esc(listeName(l))}</p></div><button class="knopf haupt" data-zu>Fertig</button></div>
+    <div class="dinhalt">
+      ${entsch&&!en.da?`<p class="klein-hinweis" style="margin:0">Laut Liste <b>entschuldigt</b>: Das Kind geht an diesem Tag schon um ${esc(en.zeit||plan)}. Kommt es doch, einfach „da“ antippen.</p>`:""}
+      <div class="wahl">
+        <button data-da aria-pressed="${!!en.da&&!en.weg&&!ab}" ${ab?"disabled":""}>${HAKEN} da</button>
+        <button data-weg aria-pressed="${!!en.weg&&!ab}" ${ab?"disabled":""}>${KREIS} ${wegWort(k,l,t,en)}${en.weg&&en.wegUm?" um "+en.wegUm:""}</button>
+        <button data-ab="krank" aria-pressed="${ab==="krank"}">krank</button>
+        <button data-ab="entschuldigt" aria-pressed="${ab==="entschuldigt"}">entschuldigt</button>
+        <button data-ab="fehlt" aria-pressed="${ab==="fehlt"}">fehlt</button>
+      </div>
+      ${l.ferien?`<div><button class="knopf" data-nicht>${istNicht(mo,k.id)?"Kommt doch in dieser Ferienwoche":"Kommt diese Ferienwoche nicht"}</button></div>`:""}
+      <div>
+        <div class="zwei">
+          <label class="feld">Abholzeit an diesem Tag<select data-zeit><option value="">ohne Zeit</option>${raster.map(r=>`<option${r===jetzt?" selected":""}>${r}</option>`).join("")}</select></label>
+          <label class="feld">Wie<select data-art><option value="${ABGEHOLT}"${art===ABGEHOLT?" selected":""}>wird abgeholt (Abg.)</option><option value="${ALLEIN}"${art===ALLEIN?" selected":""}>geht alleine (⌂)</option></select></label>
+        </div>
+        ${l.ferien?`<p class="klein-hinweis">Die Zeit gilt für diesen Tag in dieser Ferienwoche, genau wie auf dem Ferienblatt.</p>`
+          :`<p class="klein-hinweis">Laut Liste: ${esc(plan||"keine Zeit")}${en.zeit?` · <button class="knopf flach" data-zeitweg>zurück auf die Zeit laut Liste</button>`:""}</p>`}
+      </div>
+      <label class="feld">Notiz<textarea data-notiz placeholder="z. B. Oma Gisela holt ab">${esc(en.notiz)}</textarea></label>
+      ${infoBlock(k)}
+    </div>`;
+  };
+  zeichne();
+  dlg.onclick=ev=>{
+    if(ev.target===dlg) return dlg.close();
+    const b=ev.target.closest("button"); if(!b) return;
+    if(b.hasAttribute("data-zu")) return dlg.close();
+    if(b.dataset.bearbeiten){dlg.close();return oeffneKind(b.dataset.bearbeiten);}
+    if(b.hasAttribute("data-nicht")){setzeNicht(mo,k.id,!istNicht(mo,k.id));speichern();dlg.close();return renderListe();}
+    if(b.hasAttribute("data-da")){const en=eintrag(d,l.key,k.id,true);if(en.weg){en.weg=false;en.wegUm="";}else en.da=!en.da;}
+    else if(b.hasAttribute("data-weg")){const en=eintrag(d,l.key,k.id,true);if(en.weg){en.weg=false;en.wegUm="";}else{en.da=true;en.weg=true;en.wegUm=d===isoTag(new Date())?jetztHHMM():"";}}
+    else if(b.dataset.ab){const neu=abwesend(d,k.id)===b.dataset.ab?"":b.dataset.ab;setzeAbwesend(d,k.id,neu);const en=eintrag(d,l.key,k.id,false);if(neu&&en){en.da=false;en.weg=false;en.wegUm="";}}
+    else if(b.hasAttribute("data-zeitweg")) eintrag(d,l.key,k.id,true).zeit="";
+    else return;
+    speichern(); zeichne(); renderListe();
+  };
+  dlg.onchange=ev=>{
+    if(!ev.target.matches("[data-zeit],[data-art]")) return;
+    const z=dlg.querySelector("[data-zeit]").value, a=dlg.querySelector("[data-art]").value, plan=zeitFuer(k,l,t);
+    if(l.ferien) setzeFerienZeit(mo,k.id,t,z?`${z} ${a}`:"");
+    else{const neu=z?`${z} ${a}`:"ohne Zeit";eintrag(d,l.key,k.id,true).zeit=(neu===plan||(!z&&!plan))?"":neu;}
+    speichern(); zeichne(); renderListe();
+  };
+  dlg.oninput=ev=>{if(ev.target.matches("[data-notiz]")){eintrag(d,l.key,k.id,true).notiz=ev.target.value;speichern();renderListe();}};
+  dlg.showModal();
+}
+function infoBlock(k){
+  const e=state.daten.einstellungen, abh=k.abholer.filter(x=>x.trim());
+  const tel=k.telefon.map((n,i)=>n.trim()?`<dt>${esc(e.telefon_spalten[i])}</dt><dd><a href="${esc(telHref(n))}">${esc(n)}</a></dd>`:"").join("");
+  return `<dl class="info">
+    ${k.allergien?`<dt>Allergien</dt><dd class="warn">${esc(k.allergien)}</dd>`:""}
+    ${k.sonstiges?`<dt>Hinweise</dt><dd class="warn">${esc(k.sonstiges)}</dd>`:""}
+    <dt>Abholberechtigt</dt><dd>${abh.length?abh.map(esc).join(", "):"niemand eingetragen"}</dd>
+    ${tel||"<dt>Telefon</dt><dd>keine Nummer eingetragen</dd>"}
+  </dl><div><button class="knopf flach" data-bearbeiten="${k.id}">Daten des Kindes bearbeiten</button></div>`;
+}
+function oeffneInfo(kindId){
+  const k=state.daten.kinder.find(x=>x.id===kindId), dlg=$("#infoDialog");
+  const gr=GRUPPEN.filter(g=>k.gruppen[g].aktiv).map(nameGruppe).join(", ")||"auf keiner Liste";
+  const ferienKnopf=(ui.bereich==="liste"&&aktuelleListe().ferien)
+    ?`<div><button class="knopf" data-nicht>${istNicht(ui.montag,k.id)?"Kommt doch in dieser Ferienwoche":"Kommt diese Ferienwoche nicht"}</button></div>`:"";
+  dlg.innerHTML=`<div class="dkopf"><div><h2>${esc(k.name)}</h2><p>${esc(gr)} · Buchung ${esc(buchungAnzeige(k.buchung)||"–")}</p></div><button class="knopf haupt" data-zu>Fertig</button></div><div class="dinhalt">${ferienKnopf}${infoBlock(k)}</div>`;
+  dlg.onclick=ev=>{
+    const b=ev.target.closest("button");
+    if(ev.target===dlg||b?.hasAttribute("data-zu")) return dlg.close();
+    if(b?.hasAttribute("data-nicht")){setzeNicht(ui.montag,k.id,!istNicht(ui.montag,k.id));speichern();dlg.close();return renderListe();}
+    if(b?.dataset.bearbeiten){dlg.close();oeffneKind(k.id);}
+  };
+  dlg.onchange=dlg.oninput=null;
+  dlg.showModal();
+}
+
+/* Kinder */
+function kinderZeilen(liste){
+  return liste.map((k,i)=>{
+    const auf=[...GRUPPEN.filter(g=>k.gruppen[g].aktiv).map(nameGruppe),...(k.ferienHaken&&!modus4()?[nameFerien()]:[])];
+    const erste=ui.auswahlModus
+      ? `<td class="wahl"><input type="checkbox" data-wahl="${k.id}"${ui.auswahl.has(k.id)?" checked":""} aria-label="${esc(k.name)} auswählen"></td>`
+      : `<td class="nr">${i+1}</td>`;
+    return `<tr>${erste}<td class="name"><button data-kind="${k.id}">${esc(k.name||"(ohne Namen)")}</button></td>
+      <td class="hinweis">${hatHinweis(k)?`<span style="color:var(--warn)">${DREIECK}</span>`:""}</td>
+      <td class="klein">${esc(buchungAnzeige(k.buchung))}</td><td class="listen">${auf.length?esc(auf.join(", ")):'<span class="ohne">auf keiner Liste</span>'}</td></tr>`;
+  }).join("");
+}
+function renderKinder(){
+  const q=ui.kinderSuche.trim().toLocaleLowerCase("de");
+  const ohneZuordnung=k=>!GRUPPEN.some(g=>k.gruppen[g].aktiv)&&!(k.ferienHaken&&!modus4());
+  // „Ohne Zeiten“: auf einer Klassenliste, aber dort kein einziger Tag eingetragen.
+  // Spätdienst zählt nicht (Zeit kommt aus der Klasse), Ferien auch nicht (Zeiten je Woche).
+  const klassen=()=>modus4()?GRUPPEN:["a","b","c"];
+  const ohneZeiten=k=>klassen().some(g=>k.gruppen[g].aktiv&&!k.gruppen[g].zeiten.some(z=>z.trim()));
+  const alle=sortiert(aktive()).filter(k=>!q||k.name.toLocaleLowerCase("de").includes(q));
+  const zaehler={alle:alle.length,ohne:alle.filter(ohneZuordnung).length,zeiten:alle.filter(ohneZeiten).length};
+  if(ui.kinderFilter!=="alle"&&!zaehler[ui.kinderFilter]) ui.kinderFilter="alle";   // nichts mehr offen – Filter aufheben
+  const liste=ui.kinderFilter==="ohne"?alle.filter(ohneZuordnung):ui.kinderFilter==="zeiten"?alle.filter(ohneZeiten):alle;
+  kindReihe=liste.map(k=>k.id);
+  for(const b of document.querySelectorAll("[data-kfilter]")){
+    const art=b.dataset.kfilter;
+    b.textContent=({alle:"Alle",ohne:"Ohne Zuordnung",zeiten:"Ohne Zeiten"})[art]+` (${zaehler[art]})`;
+    b.setAttribute("aria-pressed",ui.kinderFilter===art);
+  }
+  $("#kinderTabelle").innerHTML=`<thead><tr><th>Nr.</th><th class="links">Name</th><th></th><th class="klein">Buchung</th><th class="links">Steht auf</th></tr></thead><tbody>${
+    kinderZeilen(liste)||`<tr><td colspan="5" style="text-align:center;color:var(--grau)">${q?"Kein Kind mit diesem Namen.":"Noch keine Kinder angelegt."}</td></tr>`}</tbody>`;
+  if(ui.kinderFilter==="zeiten"&&liste.length) $("#kinderTabelle").querySelector("thead th.links:last-of-type").textContent="Ohne Zeiten auf";
+  // Sammelleiste: Auswahl nur aus der gerade gezeigten Reihe
+  for(const id of [...ui.auswahl]) if(!kindReihe.includes(id)) ui.auswahl.delete(id);
+  $("#mehrfach").setAttribute("aria-pressed",ui.auswahlModus);
+  $("#sammelleiste").hidden=!ui.auswahlModus;
+  if(ui.auswahlModus){
+    $("#sammelZahl").textContent=`${ui.auswahl.size} ausgewählt`;
+    const wahl=$("#sammelListe");
+    const vorher=wahl.value;
+    wahl.innerHTML=sichtbareListen().map(l=>`<option value="${l.key}">${esc(listeName(l))}</option>`).join("");
+    if(vorher) wahl.value=vorher;
+  }
+  const arch=sortiert(state.daten.kinder.filter(k=>!k.aktiv));
+  $("#archivBereich").innerHTML=arch.length?`<div class="unterueberschrift">Archiv (${arch.length})</div><div class="blatt"><div class="rollen"><table class="kinder"><tbody>${kinderZeilen(arch)}</tbody></table></div></div>`:"";
+}
+function zeitWahl(pfad,wert){
+  const t=zeitTeile(wert), z=t?hhmm(t[0]):"", art=t?(t[1]||ABGEHOLT):ABGEHOLT, opts=zeitraster();
+  if(z&&!opts.includes(z)){opts.push(z);opts.sort();}
+  // „wie“ hat nur zwei Möglichkeiten – als Knopf spart es gegenüber einem Auswahlfeld einen Tipp.
+  // Der Knopf trägt den Wert in value, damit ihn das Speichern wie bisher über [data-a] liest.
+  return `<select data-z="${pfad}" aria-label="Uhrzeit"><option value="">–</option>${opts.map(o=>`<option${o===z?" selected":""}>${o}</option>`).join("")}</select>
+    <button type="button" class="artknopf" data-a="${pfad}" value="${esc(art)}" aria-label="Umschalten: wird abgeholt oder geht alleine">${art===ALLEIN?HAUS+" allein":"Abg."}</button>`;
+}
+/* Eine ausgeblendete Liste steht im Kind-Fenster nur dann noch da, wenn das Kind darin steht –
+   sonst ließe sich die Zuordnung nicht mehr lösen. */
+const zeigeGruppe=(l,aktiv)=>!l||!listenEinst(l).aus||!!aktiv;
+function gruppenBlock(pfad,titel,g,hinweis){
+  return `<div class="gruppe"><label><input type="checkbox" data-aktiv="${pfad}"${g.aktiv?" checked":""}> ${esc(titel)}</label>
+    ${hinweis?`<p class="klein-hinweis">${hinweis}</p>`:""}
+    <div class="zeiten" data-zeiten="${pfad}"${g.aktiv?"":" hidden"}>${TAGE.map((t,i)=>`<div class="tagfeld">${t}${zeitWahl(pfad+"."+i,g.zeiten[i])}</div>`).join("")}</div></div>`;
+}
+function oeffneKind(kindId){
+  const neu=!kindId, orig=neu?leeresKind():state.daten.kinder.find(x=>x.id===kindId);
+  const k=JSON.parse(JSON.stringify(orig)), e=state.daten.einstellungen, dlg=$("#kindDialog"), bu=buchungLesen(k.buchung);
+  const stelle=neu?-1:kindReihe.indexOf(orig.id);
+  const vorher=stelle>0?kindReihe[stelle-1]:null, nachher=stelle>=0&&stelle<kindReihe.length-1?kindReihe[stelle+1]:null;
+  dlg.innerHTML=`<form id="kindForm">
+    <div class="dkopf"><div><h2>${neu?"Kind anlegen":esc(k.name)}</h2><p>${neu?"Name und mindestens eine Liste eintragen"
+      :(stelle>=0?`Kind ${stelle+1} von ${kindReihe.length} · `:"")+"Änderungen gelten sofort für alle Listen"}</p></div></div>
+    <div class="dinhalt">
+      <div class="zwei"><label class="feld">Name<input name="name" value="${esc(k.name)}" autocomplete="off"></label>
+        <div class="feld">Buchung
+          <div class="buchungswahl">${BUCHUNGEN.map(([kz,name])=>(modus4()&&kz!=="Fr")
+            ?(bu.an.has(kz)?`<input type="hidden" name="buchung.${kz}" value="an">`:"")
+            :`<label class="chipwahl"><input type="checkbox" name="buchung.${kz}"${bu.an.has(kz)?" checked":""}> ${name} <small>${kz}</small></label>`).join("")}</div>
+          ${bu.rest?`<label class="feld" style="margin-top:6px">Weitere Angabe aus der Mappe<input name="buchungRest" value="${esc(bu.rest)}"></label>`:""}
+        </div></div>
+      <div class="stapel"><div class="unterueberschrift" style="margin:4px 0 0">Listen und Abholzeiten</div>
+        ${GRUPPEN.filter(g=>zeigeGruppe(LISTEN.find(x=>x.gruppe===g),k.gruppen[g].aktiv)).map(g=>g==="spaet"&&!modus4()
+          ?`<div class="gruppe"><label><input type="checkbox" data-aktiv="gruppen.spaet"${k.gruppen.spaet.aktiv?" checked":""}> ${esc(nameGruppe("spaet"))}</label>
+             <p class="klein-hinweis">Hängt mit der Buchung „Sp“ zusammen. Die Abholzeit kommt aus der Klasse; wer Mo–Do bis 16:00 bzw. Fr bis 12:25 geht, steht auf der Spätdienstliste als entschuldigt.</p></div>`
+          :gruppenBlock("gruppen."+g,nameGruppe(g),k.gruppen[g])).join("")}
+        <div class="gruppe"${(modus4()||!zeigeGruppe(LISTEN.find(x=>x.ferien),k.ferienHaken))?" hidden":""}><label><input type="checkbox" name="ferienHaken"${k.ferienHaken?" checked":""}> ${esc(nameFerien())}</label>
+          <p class="klein-hinweis">Hängt mit der Buchung „Fe“ zusammen. Das Kind steht in allen Ferienwochen auf der Ferienliste; die Zeiten werden dort direkt je Woche eingetragen.</p></div></div>
+      <div class="stapel"><div class="unterueberschrift" style="margin:4px 0 0">Telefon</div>
+        <div class="drei">${k.telefon.map((n,i)=>`<label class="feld">${esc(e.telefon_spalten[i])}<input name="telefon.${i}" value="${esc(n)}" inputmode="tel"></label>`).join("")}</div></div>
+      <div class="zwei"><label class="feld">Allergien<textarea name="allergien">${esc(k.allergien)}</textarea></label>
+        <label class="feld">Sonstiges / Hinweise<textarea name="sonstiges">${esc(k.sonstiges)}</textarea></label></div>
+      <div class="stapel"><div class="unterueberschrift" style="margin:4px 0 0">Abholberechtigte</div>
+        <div class="drei">${k.abholer.map((n,i)=>`<label class="feld">Abholer ${i+1}<input name="abholer.${i}" value="${esc(n)}"></label>`).join("")}</div></div>
+    </div>
+    <div class="dfuss">${neu?"":`<button type="button" class="knopf gefahr" data-archiv>${k.aktiv?"Ins Archiv legen":"Aus dem Archiv holen"}</button>`}
+      ${(!neu&&!k.aktiv)?`<button type="button" class="knopf gefahr-voll" data-loeschen>Endgültig löschen</button>`:""}
+      ${(vorher||nachher)?`<div class="blaettern">
+        <button type="button" class="knopf" data-vor${vorher?"":" disabled"} aria-label="Vorheriges Kind">‹</button>
+        <button type="button" class="knopf" data-weiter${nachher?"":" disabled"}>Nächstes ›</button>
+        <small>speichert</small></div>`:""}
+      <div class="rechts"><button type="button" class="knopf" data-abbrechen>Abbrechen</button><button type="submit" class="knopf haupt">Speichern</button></div></div>
+  </form>`;
+  const f=dlg.querySelector("form");
+  f.addEventListener("change",ev=>{const a=ev.target.dataset.aktiv;const z=a&&f.querySelector(`[data-zeiten="${a}"]`);if(z)z.hidden=!ev.target.checked;});
+  f.addEventListener("click",ev=>{
+    const b=ev.target.closest(".artknopf"); if(!b) return;
+    const allein=b.value!==ALLEIN;
+    b.value=allein?ALLEIN:ABGEHOLT;
+    b.innerHTML=allein?HAUS+" allein":"Abg.";
+  });
+  if(!modus4()){   // Buchung und Listen gekoppelt: Sp ↔ Spätdienst, Fe ↔ Ferien
+    const paare=[['[name="buchung.Sp"]','[data-aktiv="gruppen.spaet"]'],['[name="buchung.Fe"]','[name="ferienHaken"]']];
+    f.addEventListener("change",ev=>{
+      for(const [x,y] of paare){
+        const a=f.querySelector(x), b=f.querySelector(y); if(!a||!b) continue;
+        if(ev.target===a) b.checked=a.checked; else if(ev.target===b) a.checked=b.checked;
+      }
+    });
+  }
+  f.querySelector("[data-abbrechen]").onclick=()=>dlg.close();
+  const arch=f.querySelector("[data-archiv]");
+  if(arch) arch.onclick=()=>{merkeStand();orig.aktiv=!orig.aktiv;speichern();dlg.close();zeigeHinweis(orig.aktiv?`${orig.name} steht wieder auf den Listen.`:`${orig.name} liegt im Archiv.`,true);renderBereich();};
+  const weg=f.querySelector("[data-loeschen]");
+  if(weg) weg.onclick=()=>{
+    if(!confirm(`„${orig.name}“ endgültig löschen? Name, Telefon, Allergien, Abholer und alle Häkchen dieses Kindes werden entfernt. Das lässt sich nur direkt danach rückgängig machen.`)) return;
+    merkeStand(); loescheKind(orig.id); speichern(); dlg.close(); renderBereich();
+    zeigeHinweis(`${orig.name} wurde endgültig gelöscht.`,true);
+  };
+  const blaettern=ziel=>{ if(kindSpeichern()) oeffneKind(ziel); };
+  f.querySelector("[data-vor]")?.addEventListener("click",()=>blaettern(vorher));
+  f.querySelector("[data-weiter]")?.addEventListener("click",()=>blaettern(nachher));
+  f.onsubmit=ev=>{ ev.preventDefault(); if(!kindSpeichern()) return; dlg.close(); zeigeHinweis(neu?`${k.name} ist angelegt.`:"Gespeichert."); };
+  function kindSpeichern(){
+    const fd=new FormData(f), name=fd.get("name").trim();
+    if(!name){zeigeHinweis("Bitte einen Namen eintragen.");return false;}
+    k.name=name;
+    k.buchung=buchungText(new Set(BUCHUNGEN.map(([kz])=>kz).filter(kz=>fd.get("buchung."+kz))),String(fd.get("buchungRest")||"").trim()); k.allergien=fd.get("allergien").trim(); k.sonstiges=fd.get("sonstiges").trim();
+    for(let i=0;i<5;i++){k.telefon[i]=fd.get("telefon."+i).trim();k.abholer[i]=fd.get("abholer."+i).trim();}
+    k.ferienHaken=f.querySelector('[name="ferienHaken"]').checked;
+    f.querySelectorAll("[data-aktiv]").forEach(cb=>{
+      const [art,key]=cb.dataset.aktiv.split("."); k[art][key].aktiv=cb.checked;
+      if(!f.querySelector(`[data-z="${art}.${key}.0"]`)){k[art][key].zeiten=["","","","",""];return;}   // Spätdienst: Zeit kommt aus der Klasse
+      for(let i=0;i<5;i++){const z=f.querySelector(`[data-z="${art}.${key}.${i}"]`).value,a=f.querySelector(`[data-a="${art}.${key}.${i}"]`).value;k[art][key].zeiten[i]=z?`${z} ${a}`:"";}
+    });
+    if(!modus4()) koppeln(k);
+    if(neu) state.daten.kinder.push(k); else Object.assign(orig,k);
+    speichern(); renderBereich();
+    return true;
+  }
+  if(!dlg.open) dlg.showModal();   // beim Blättern bleibt das Fenster offen
+  dlg.scrollTop=0;                 // ... und zeigt das nächste Kind von oben
+}
+
+/* Nachschlagen */
+function renderNachschlagen(){
+  $("#nsTitel").textContent={telefon:"Telefonliste",allergien:"Allergien & Info",abholer:"Abholberechtigte"}[ui.ns];
+  document.querySelectorAll("[data-ns]").forEach(b=>b.setAttribute("aria-pressed",b.dataset.ns===ui.ns));
+  const q=ui.nsSuche.trim().toLocaleLowerCase("de"), e=state.daten.einstellungen;
+  let kinder=sortiert(aktive()).filter(k=>!q||k.name.toLocaleLowerCase("de").includes(q)), kopf, zellen;
+  if(ui.ns==="telefon"){kopf=["Nr.","Name",...e.telefon_spalten];zellen=k=>k.telefon.map(n=>`<td>${n?`<a href="${esc(telHref(n))}">${esc(n)}</a>`:""}</td>`).join("");}
+  else if(ui.ns==="allergien"){kinder=kinder.filter(hatHinweis);kopf=["Nr.","Name","Buchung","Allergien","Sonstiges / Hinweise"];zellen=k=>`<td style="text-align:center;font-size:13px">${esc(buchungAnzeige(k.buchung))}</td><td class="warn">${esc(k.allergien)}</td><td>${esc(k.sonstiges)}</td>`;}
+  else{kopf=["Nr.","Name des Kindes","Abholer 1","Abholer 2","Abholer 3","Abholer 4","Abholer 5"];zellen=k=>k.abholer.map(a=>`<td>${esc(a)}</td>`).join("");}
+  $("#nsTabelle").innerHTML=`<thead><tr>${kopf.map((h,i)=>`<th class="${i===1?"links":""}">${esc(h)}</th>`).join("")}</tr></thead><tbody>${
+    kinder.map((k,i)=>`<tr><td class="nr">${i+1}</td><td class="name" style="font-weight:600">${esc(k.name)}</td>${zellen(k)}</tr>`).join("")||`<tr><td colspan="${kopf.length}" style="text-align:center;color:var(--grau)">Keine Einträge.</td></tr>`}</tbody>`;
+  $("#nsTabelle").style.minWidth="760px";
+}
+
+/* Einstellungen */
+function renderEinstellungen(){
+  const e=state.daten.einstellungen, s=state.letzteSicherung, tage=s?Math.floor((Date.now()-new Date(s))/864e5):null;
+  $("#sicherStand").textContent=s?(tage===0?"heute":tage===1?"gestern":`vor ${tage} Tagen`):"noch nie";
+  $("#sicherStand").className="sicherstand"+((tage===null||tage>=14)?" alt":"");
+  $("#sicherText").textContent=(tage===null||tage>=14)?"Bitte jetzt sichern. Geht das iPad kaputt oder verloren, sind die Daten sonst weg.":"Empfohlen: einmal pro Woche sichern.";
+  document.querySelectorAll('[name="aufbau"]').forEach(r=>r.checked=r.value===(e.aufbau||"oesterfeld"));
+  $("#abschnittFerien").hidden=modus4()||!sichtbareListen().some(l=>l.ferien);
+  $("#listenEinst").innerHTML=`<thead><tr><th class="links" style="padding-left:18px">Blatt</th><th>Anzeigen</th><th class="links">Bezeichnung</th><th class="links">Überschrift</th><th class="links">Untertitel</th></tr></thead><tbody>${
+    alleListen().map(l=>{const le=listenEinst(l), sn=standardName(l), an=!le.aus;return `<tr${an?"":' class="nicht"'}><td>${esc(sn)}</td>
+      <td style="text-align:center"><input type="checkbox" data-le="${l.key}" data-feld="an"${an?" checked":""} style="width:24px;height:24px;accent-color:var(--akzent)" aria-label="${esc(sn)} anzeigen"></td>
+      <td><input data-le="${l.key}" data-feld="name" value="${esc(le.name||"")}" placeholder="${esc(sn)}" aria-label="Bezeichnung für ${esc(sn)}"></td>
+      <td><input data-le="${l.key}" data-feld="titel" value="${esc(le.titel||"")}" placeholder="ANWESENHEITSLISTE" aria-label="Überschrift für ${esc(sn)}"></td>
+      <td><input data-le="${l.key}" data-feld="untertitel" value="${esc(le.untertitel||"")}" placeholder="${esc("Kategorie: "+listeName(l))}" aria-label="Untertitel für ${esc(sn)}"></td></tr>`;}).join("")}</tbody>`;
+  e.ferien_zeitraeume.sort((a,b)=>(a.von||"9").localeCompare(b.von||"9"));
+  $("#ferienEinst").innerHTML=`<thead><tr><th class="links" style="padding-left:18px">Name</th><th class="links">von</th><th class="links">bis</th><th></th></tr></thead><tbody>${
+    e.ferien_zeitraeume.map((z,i)=>`<tr><td style="width:auto"><input data-zr="${i}" data-feld="name" value="${esc(z.name)}" aria-label="Name des Zeitraums"></td>
+      <td><input type="date" data-zr="${i}" data-feld="von" value="${esc(z.von)}" aria-label="von"></td>
+      <td><input type="date" data-zr="${i}" data-feld="bis" value="${esc(z.bis)}" aria-label="bis"></td>
+      <td style="width:1%"><button class="knopf flach gefahr" data-zr-weg="${i}">entfernen</button></td></tr>`).join("")
+    ||'<tr><td colspan="4" style="color:var(--grau)">Noch keine Ferienzeiträume eingetragen.</td></tr>'}</tbody>`;
+  $("#einstEinrichtung").value=e.einrichtung; $("#einstZusatz").value=e.zusatz_legende;
+  $("#einstTelefon").innerHTML=e.telefon_spalten.map((s,i)=>`<input data-tel="${i}" value="${esc(s)}" aria-label="Telefonspalte ${i+1}">`).join("");
+  $("#einstVorwarnung").value=e.vorwarnung_min;
+  $("#einstAufbewahrung").value=e.aufbewahrung_monate;
+  $("#einstVon").value=e.zeitraster.von; $("#einstBis").value=e.zeitraster.bis; $("#einstSchritt").value=e.zeitraster.schritt_min;
+  $("#pinText").textContent=state.pin?"Die App ist mit einem PIN geschützt."
+    :"Kein PIN eingerichtet – wer das iPad in die Hand nimmt, sieht die Listen sofort.";
+  $("#pinEinrichten").textContent=state.pin?"PIN ändern":"PIN einrichten";
+  $("#pinEntfernen").hidden=!state.pin;
+  $("#pinSperren").hidden=!state.pin;
+  if(navigator.standalone===true||matchMedia("(display-mode: standalone)").matches) $("#installText").innerHTML="<b>Die App ist installiert.</b> Die Daten bleiben auf diesem iPad, auch ohne Internet.";
+  renderStaende(); speicherStatus();
+}
+async function sicherungSpeichern(){
+  if(window.self!==window.top){zeigeHinweis("In dieser Vorschau ist Speichern gesperrt. In der installierten App landet die Datei in der Dateien-App.");return;}
+  const name=`Anwesenheit_Sicherung_${isoTag(new Date())}.json`;
+  // Für das Windows-Programm: der eine Ferienhaken wird auf dessen Ferien 1–6 gespiegelt
+  const ausgabe={...state.daten,
+    kinder:state.daten.kinder.map(k=>({...k,ferien:Object.fromEntries(FERIENWOCHEN.map(w=>[w,{aktiv:!!k.ferienHaken,zeiten:k.ferien[w].zeiten}]))})),
+    anwesenheit:{eintraege:state.eintraege,abwesend:state.abwesend,ferienZeiten:state.ferienZeiten,ferienNicht:state.ferienNicht}};
+  const blob=new Blob([JSON.stringify(ausgabe,null,1)],{type:"application/json"});
+  const file=new File([blob],name,{type:"application/json"});
+  const herunterladen=()=>{
+    const a=document.createElement("a"); a.href=URL.createObjectURL(blob); a.download=name;
+    document.body.appendChild(a); a.click(); a.remove(); setTimeout(()=>URL.revokeObjectURL(a.href),4000);
+  };
+  // iPad/iPhone: Teilen-Blatt („In Dateien sichern“). Android und PC: normaler Download –
+  // Chrome auf Android lässt .json-Dateien nicht teilen und meldet „Permission denied“.
+  const apple=/iPad|iPhone|iPod/.test(navigator.userAgent)||(navigator.platform==="MacIntel"&&navigator.maxTouchPoints>1);
+  try{
+    if(apple&&navigator.canShare&&navigator.canShare({files:[file]})){
+      try{ await navigator.share({files:[file],title:name}); }
+      catch(err){ if(err&&err.name==="AbortError") return; herunterladen(); }
+    } else herunterladen();
+    state.letzteSicherung=new Date().toISOString(); speichern(); renderEinstellungen(); renderBand();
+    zeigeHinweis(apple?"Sicherung gespeichert.":"Sicherung gespeichert – die Datei liegt im Download-Ordner.");
+  }catch(err){ zeigeHinweis("Speichern hat nicht geklappt: "+(err&&err.message||err)); }
+}
+/* Zwei Wege: alles ersetzen, oder nur die Stammdaten übernehmen und die Häkchen
+   dieses iPads stehen lassen – gedacht für mehrere iPads, die dieselben Kinder führen. */
+function einspielFrage(roh){
+  const dlg=$("#einspielDialog");
+  return new Promise(fertig=>{
+    dlg.innerHTML=`<div class="dkopf"><div><h2>Sicherung einspielen</h2>
+        <p>${roh.kinder.length} Kinder in der Datei · ${state.daten.kinder.length} auf diesem iPad</p></div></div>
+      <div class="dinhalt start">
+        <button class="startwahl" data-art="alles"><b>Alles ersetzen</b><span>Kinder, Einstellungen <b>und</b> alle Häkchen, Zeiten und Notizen dieses iPads kommen aus der Sicherung</span></button>
+        <button class="startwahl" data-art="stamm"><b>Nur Kinder und Einstellungen</b><span>Namen, Abholzeiten, Telefon, Allergien und Bezeichnungen kommen aus der Sicherung – die Häkchen und Notizen dieses iPads bleiben stehen</span></button>
+        <p class="klein-hinweis">Der jetzige Stand wird vorher unter „Frühere Stände“ abgelegt. Häkchen bleiben nur für Kinder erhalten, die es auf beiden Geräten gibt – also für Kinder aus derselben Mappe oder Sicherung. Häkchen unbekannter Kinder werden entfernt.</p>
+      </div>
+      <div class="dfuss"><div class="rechts"><button class="knopf" data-abbrechen>Abbrechen</button></div></div>`;
+    dlg.onclick=ev=>{
+      const b=ev.target.closest("[data-art]");
+      if(b){dlg.close();return fertig(b.dataset.art);}
+      if(ev.target.closest("[data-abbrechen]")||ev.target===dlg){dlg.close();fertig(null);}
+    };
+    dlg.showModal();
+  });
+}
+/* Häkchen von Kindern, die es nicht mehr gibt, wegräumen – sonst liegen sie unsichtbar herum.
+   Die Logik steht im Block <script id="zusammen"> und wird dort geprüft. */
+const nurBekannte=stand=>Zusammen.nurBekannte(stand);
+function sicherungLaden(datei){
+  const r=new FileReader();
+  r.onload=async()=>{
+    try{
+      const roh=JSON.parse(r.result);
+      if(!roh||!Array.isArray(roh.kinder)) throw new Error("Es stehen keine Kinder darin.");
+      let art="alles";
+      if(state.daten.kinder.length&&!state.beispiel){ art=await einspielFrage(roh); if(!art) return; }
+      vorherSichern("vor dem Laden einer Sicherung"); merkeStand();
+      const a=roh.anwesenheit||{};
+      const neu={daten:normalisieren(roh),eintraege:a.eintraege||{},abwesend:a.abwesend||{},ferienZeiten:a.ferienZeiten||{},ferienNicht:a.ferienNicht||{},letzteSicherung:new Date().toISOString(),beispiel:false};
+      if(art==="stamm"){
+        neu.eintraege=state.eintraege; neu.abwesend=state.abwesend;
+        neu.ferienZeiten=state.ferienZeiten; neu.ferienNicht=state.ferienNicht;
+      }
+      const verwaist=nurBekannte(neu);
+      state=neu;
+      jetztSpeichern(); schliesseStart();
+      if(!modus4()&&zeitraumFuerWoche(montag(new Date()))) ui.liste="ferien";
+      zeigeHinweis(art==="stamm"
+        ? `${roh.kinder.length} Kinder übernommen. Die Häkchen dieses iPads bleiben stehen${verwaist?`, ${verwaist} zu unbekannten Kindern wurden entfernt`:""}.`
+        : `${roh.kinder.length} Kinder geladen.`,true);
+      renderBereich();
+    }catch(err){zeigeHinweis("Diese Datei ist keine Sicherung der Anwesenheitsliste. "+err.message);}
+  };
+  r.readAsText(datei);
+}
+/* PIN: eine Hürde gegen neugierige Blicke, keine Verschlüsselung.
+   Liegt nur auf diesem Gerät (state.pin) und wandert nicht in die Sicherungsdatei. */
+async function pinHash(pin){
+  const text="anwesenheit:"+String(pin).trim();
+  try{
+    const h=await crypto.subtle.digest("SHA-256",new TextEncoder().encode(text));
+    return [...new Uint8Array(h)].map(x=>x.toString(16).padStart(2,"0")).join("");
+  }catch(e){
+    let h=0; for(const c of text) h=(h*31+c.charCodeAt(0))>>>0;
+    return "einfach-"+h;   // ohne crypto.subtle (z. B. als lokale Datei geöffnet)
+  }
+}
+let versteckSeit=0;
+function pinFragen(){
+  const dlg=$("#pinDialog");
+  document.body.classList.add("gesperrt");
+  dlg.innerHTML=`<form id="pinForm"><div class="dkopf"><div><h2>Gesperrt</h2><p>Bitte den PIN eingeben.</p></div></div>
+    <div class="dinhalt" style="justify-items:center">
+      <input class="pinfeld" name="pin" type="password" inputmode="numeric" autocomplete="off" aria-label="PIN">
+      <p class="klein-hinweis" data-fehler style="min-height:18px"></p>
+      <button class="knopf haupt" type="submit">Öffnen</button>
+    </div></form>`;
+  const f=dlg.querySelector("form");
+  f.onsubmit=async ev=>{
+    ev.preventDefault();
+    if(await pinHash(f.pin.value)===state.pin){
+      dlg.close(); document.body.classList.remove("gesperrt"); versteckSeit=0; renderBereich();
+    }else{
+      f.querySelector("[data-fehler]").textContent="Falscher PIN.";
+      f.pin.value=""; f.pin.focus();
+    }
+  };
+  dlg.addEventListener("cancel",ev=>ev.preventDefault());   // nicht mit Esc wegklickbar
+  if(!dlg.open) dlg.showModal();
+  setTimeout(()=>f.pin.focus(),100);
+}
+document.addEventListener("visibilitychange",()=>{
+  if(!state||!state.pin) return;
+  if(document.visibilityState==="hidden"){versteckSeit=Date.now();return;}
+  if(versteckSeit&&Date.now()-versteckSeit>15*60*1000) pinFragen();   // nach 15 Minuten im Hintergrund
+});
+
+/* Endgültig löschen: Kind und alle seine Einträge entfernen (Löschpflicht nach DSGVO) */
+function loescheKind(id){
+  allesSchmutzig();   // greift quer durch alle Monate
+  state.daten.kinder=state.daten.kinder.filter(k=>k.id!==id);
+  for(const tag of Object.keys(state.eintraege)){
+    for(const liste of Object.keys(state.eintraege[tag])) delete state.eintraege[tag][liste][id];
+  }
+  for(const tag of Object.keys(state.abwesend)) delete state.abwesend[tag][id];
+  for(const woche of Object.keys(state.ferienZeiten)) delete state.ferienZeiten[woche][id];
+  for(const woche of Object.keys(state.ferienNicht)) delete state.ferienNicht[woche][id];
+}
+/* Alte Tageseinträge aufräumen – Datensparsamkeit. 0 Monate = alles behalten. */
+function aufraeumenEintraege(monate){
+  const m=Math.max(0,+monate||0);
+  if(!m) return 0;
+  const grenze=new Date(); grenze.setMonth(grenze.getMonth()-m);
+  const stichtag=isoTag(grenze);
+  allesSchmutzig();   // ganze Monate fallen weg
+  let weg=0;
+  for(const topf of [state.eintraege,state.abwesend,state.ferienZeiten,state.ferienNicht]){
+    for(const tag of Object.keys(topf)) if(tag<stichtag){delete topf[tag];weg++;}
+  }
+  return weg;
+}
+
+/* Hinweisband: Beispieldaten oder überfällige Sicherung */
+function renderBand(){
+  const b=$("#band");
+  // Kurz halten: der Hinweis steht im Kopfband, die Erklärung unter Einstellungen → Sicherung
+  if(state.beispiel){b.hidden=false;b.innerHTML="<b>Beispieldaten</b>";return;}
+  const s=state.letzteSicherung, tage=s?Math.floor((Date.now()-new Date(s))/864e5):null;
+  if(state.daten.kinder.length&&(tage===null||tage>=14)){
+    b.hidden=false;
+    b.innerHTML=`<b>${tage===null?"Noch keine Sicherung":`Sicherung vor ${tage} Tagen`}</b><button class="knopf" data-sichern>Sichern</button>`;
+    return;
+  }
+  b.hidden=true;
+}
+
+/* Erster Start: noch keine Daten auf diesem iPad */
+function leererStand(){
+  return {daten:{version:1,einstellungen:standardEinstellungen(),kinder:[]},eintraege:{},abwesend:{},ferienZeiten:{},ferienNicht:{},letzteSicherung:null,beispiel:false};
+}
+function schliesseStart(){const d=$("#startDialog");if(d.open)d.close();}
+function oeffneStart(){
+  const dlg=$("#startDialog");
+  dlg.innerHTML=`<div class="dkopf"><div><h2>Willkommen</h2><p>Auf diesem iPad sind noch keine Kinder gespeichert.</p></div></div>
+    <div class="dinhalt start">
+      <label class="startwahl" for="mappeDatei"><b>Excel-Mappe übernehmen</b><span>aktuelle.xlsx oder Klassen 1-4.xlsx – mit Zeiten, Telefon, Allergien, Abholern und den Bezeichnungen der Listen</span></label>
+      <label class="startwahl" for="sicherungDatei"><b>Sicherung laden</b><span>eine Sicherungsdatei dieser App oder daten.json des Windows-Programms</span></label>
+      <button class="startwahl" data-leer><b>Mit leerer Liste beginnen</b><span>die Kinder nach und nach selbst anlegen</span></button>
+      <button class="startwahl" data-beispiel><b>Erst einmal ausprobieren</b><span>mit 30 erfundenen Kindern</span></button>
+    </div>`;
+  const ersteSeite=dlg.innerHTML;
+  dlg.onclick=ev=>{
+    if(ev.target.closest("[data-zurueck-start]")){dlg.innerHTML=ersteSeite;return;}
+    if(ev.target.closest("[data-leer]")){
+      dlg.innerHTML=`<div class="dkopf"><div><h2>Mit leerer Liste beginnen</h2><p>Welche Listen gibt es bei euch? Das lässt sich später unter Einstellungen ändern.</p></div></div>
+        <div class="dinhalt start">
+          <button class="startwahl" data-aufbau-start="oesterfeld"><b>Klassen A–C, Spätdienst und Ferien</b><span>wie die Mappe „aktuelle.xlsx“</span></button>
+          <button class="startwahl" data-aufbau-start="klassen4"><b>Klassen 1–4, ohne Spätdienst und Ferien</b><span>wie die Mappe „Klassen 1-4.xlsx“</span></button>
+          <div><button class="knopf flach" data-zurueck-start>‹ Zurück</button></div>
+        </div>`;
+      return;
+    }
+    const wahl=ev.target.closest("[data-aufbau-start]");
+    if(wahl){
+      state=leererStand(); state.daten.einstellungen.aufbau=wahl.dataset.aufbauStart;
+      jetztSpeichern(); dlg.close();
+      ui.liste="klasse_a"; merkeUi(); ui.bereich="kinder"; renderBereich(); nachOben();
+      zeigeHinweis("Leere Liste angelegt. Das erste Kind kommt über „Kind anlegen“ dazu.");
+      return;
+    }
+    if(!ev.target.closest("[data-beispiel]")) return;
+    state=beispielStand(); jetztSpeichern(); dlg.close();
+    if(!modus4()&&zeitraumFuerWoche(montag(new Date()))) ui.liste="ferien";
+    renderBereich();
+  };
+  dlg.showModal();
+}
+
+/* Import: Zusammenfassung zeigen, Ferienblätter Wochen zuordnen, dann ersetzen */
+function ferienWochenAuswahl(){
+  const out=[];
+  for(const z of [...(state.daten.einstellungen.ferien_zeitraeume||[])].filter(z=>z.von&&z.bis).sort((a,b)=>a.von.localeCompare(b.von))){
+    const a=montag(new Date(z.von+"T12:00")), b=montag(new Date(z.bis+"T12:00"));
+    for(let m=a,n=1;m<=b;m=plusTage(m,7),n++){
+      const fr=plusTage(m,4);
+      out.push({mo:isoTag(m),bis:z.bis,text:`${z.name} · Woche ${n} (${ddmm(m)}–${ddmm(fr)}${fr.getFullYear()})`});
+    }
+  }
+  return out;
+}
+function oeffneImport(erg,dateiname){
+  const dlg=$("#importDialog"), l4=erg.aufbau==="klassen4";
+  const vorgabe={klasse_a:l4?"Klasse 1":"Klasse A",klasse_b:l4?"Klasse 2":"Klasse B",klasse_c:l4?"Klasse 3":"Klasse C",spaetdienst:l4?"Klasse 4":"Spätdienst"};
+  const zeilen=LISTEN.filter(l=>!l.ferien).map(l=>`<tr><td>${esc(erg.einstellungen.listen[l.key]?.name||vorgabe[l.key])}</td><td>${erg.kinder.filter(k=>k.gruppen[l.gruppe].aktiv).length}</td></tr>`).join("");
+  const wochen=ferienWochenAuswahl(), heuteMo=isoTag(montag(new Date()));
+  let start=wochen.findIndex(w=>w.bis>=heuteMo); if(start<0) start=wochen.length;
+  const blaetter=erg.ferienBlaetter;
+  const ersetzt=state.daten.kinder.length&&!state.beispiel;
+  const abgl=ersetzt?mappenAbgleich(erg):null;
+  dlg.innerHTML=`<div class="dkopf"><div><h2>Excel-Mappe übernehmen</h2><p>${esc(dateiname)}</p></div></div>
+    <div class="dinhalt">
+      <p style="margin:0"><b>Erkannt:</b> ${l4?"Klassen 1–4, ohne Spätdienst und Ferien":"Klassen A–C, Spätdienst und Ferien"}</p>
+      <table class="bilanz"><tbody><tr><td>Kinder insgesamt</td><td>${erg.kinder.length}</td></tr>${zeilen}
+        ${l4?"":`<tr><td>mit Ferienhaken</td><td>${erg.kinder.filter(k=>k.ferienHaken).length}</td></tr>`}</tbody></table>
+      ${blaetter.length?`<div>
+        <div class="unterueberschrift" style="margin:0">Ferienzeiten</div>
+        <p class="klein-hinweis">Die Mappe kennt nur „Ferien 1–6“. Hier legst du fest, zu welcher Woche die Zeiten eines Blatts gehören.${wochen.length?"":" Dafür müssen unter Einstellungen erst Ferienzeiträume eingetragen sein."}</p>
+        <div class="zuordnung">${blaetter.map((b,i)=>`<label class="feld">Ferienblatt ${esc(b.woche)} · Zeiten für ${b.kinderMitZeiten} ${b.kinderMitZeiten===1?"Kind":"Kinder"}
+          <select data-blatt="${esc(b.woche)}"><option value="">nicht übernehmen</option>${wochen.map((w,j)=>`<option value="${w.mo}"${j===start+i?" selected":""}>${esc(w.text)}</option>`).join("")}</select></label>`).join("")}</div>
+      </div>`:""}
+      ${erg.hinweise.map(h=>`<p class="warnhinweis">${esc(h)}</p>`).join("")}
+      ${ersetzt?`<div class="stapel">
+        <div class="unterueberschrift" style="margin:0">Was soll mit dem bisherigen Stand geschehen?</div>
+        <label class="aufbau"><input type="radio" name="importart" value="zusammen" checked>
+          <span><b>Kinder wiedererkennen</b><small>${abgl.paare.size} wiedererkannt · ${abgl.neu.length} neu${abgl.fehlenAktiv.length?` · ${abgl.fehlenAktiv.length} nicht mehr in der Mappe (${abgl.fehlenAktiv.length===1?"wandert":"wandern"} ins Archiv)`:""}. Häkchen, Notizen und Ferienzeiten dieses iPads bleiben erhalten.</small></span></label>
+        <label class="aufbau"><input type="radio" name="importart" value="ersetzen">
+          <span><b>Alles ersetzen</b><small>Wie auf einem neuen iPad: nur die ${erg.kinder.length} Kinder aus der Mappe. Alle Häkchen, Notizen und Ferienzeiten dieses iPads werden gelöscht.</small></span></label>
+        <p class="klein-hinweis">Wiedererkannt wird über den Namen. Wurde ein Name geändert, gilt das Kind als neu, und das alte wandert ins Archiv. Der jetzige Stand wird vorher unter „Frühere Stände“ abgelegt.</p>
+      </div>`:""}
+    </div>
+    <div class="dfuss"><div class="rechts"><button class="knopf" data-abbrechen>Abbrechen</button><button class="knopf haupt" data-uebernehmen>Übernehmen</button></div></div>`;
+  dlg.onclick=async ev=>{
+    const b=ev.target.closest("button"); if(!b) return;
+    if(b.hasAttribute("data-abbrechen")) return dlg.close();
+    if(!b.hasAttribute("data-uebernehmen")) return;
+    const zuordnung={}, gesehen=new Set();
+    for(const s of dlg.querySelectorAll("[data-blatt]")){
+      if(s.value&&gesehen.has(s.value)) return zeigeHinweis("Zwei Ferienblätter zeigen auf dieselbe Woche. Bitte eines davon ändern.");
+      if(s.value) gesehen.add(s.value);
+      zuordnung[s.dataset.blatt]=s.value;
+    }
+    const art=dlg.querySelector('[name="importart"]:checked')?.value||"ersetzen";
+    await vorherSichern(`vor dem Übernehmen von „${dateiname}“`); merkeStand();
+    state=uebernehmeMappe(erg,zuordnung,art);
+    await jetztSpeichern(); dlg.close();
+    ui.liste=(!modus4()&&zeitraumFuerWoche(montag(new Date())))?"ferien":"klasse_a"; merkeUi();
+    ui.bereich="liste"; renderBereich(); nachOben();
+    zeigeHinweis(art==="zusammen"
+      ? `${erg.kinder.length} Kinder aus der Mappe übernommen, ${abgl.paare.size} davon wiedererkannt. Die Häkchen bleiben stehen.`
+      : `${state.daten.kinder.length} Kinder übernommen. Bitte jetzt einmal sichern.`,true);
+  };
+  dlg.showModal();
+}
+/* Die Mappe kennt keine Nummern, nur Namen. Beim erneuten Einlesen werden die Kinder
+   deshalb über den Namen wiedererkannt (gleicher Schlüssel wie beim Sortieren, also
+   ohne Rücksicht auf Umlaute und Groß-/Kleinschreibung) – sonst wirft jedes Einlesen
+   die Häkchen der vergangenen Monate weg. */
+const mappenAbgleich=erg=>Zusammen.abgleich(state.daten.kinder,erg.kinder,Regeln.sortSchluessel);
+function uebernehmeMappe(erg,zuordnung,art){
+  const alt=state.daten.einstellungen, l4=erg.aufbau==="klassen4";
+  const e={...standardEinstellungen(),aufbau:erg.aufbau,einrichtung:erg.einstellungen.einrichtung,
+    zusatz_legende:erg.einstellungen.zusatz_legende,telefon_spalten:erg.einstellungen.telefon_spalten,
+    zeitraster:alt.zeitraster,ferien_zeitraeume:alt.ferien_zeitraeume,listen:{}};
+  for(const l of LISTEN){
+    const q=erg.einstellungen.listen[l.key]; if(!q) continue;
+    const vorgabe=l4?(NAMEN4[l.key]||l.name):l.name, le={};
+    if(q.name&&q.name!==vorgabe&&!l.ferien) le.name=q.name;
+    if(q.titel&&q.titel!=="ANWESENHEITSLISTE") le.titel=q.titel;
+    if(q.untertitel&&q.untertitel!=="Kategorie: "+(le.name||vorgabe)) le.untertitel=q.untertitel;   // Vorgabe bleibt leer und wandert mit
+    e.listen[l.key]=le;
+  }
+  const zusammen=art==="zusammen";
+  const ab=zusammen?mappenAbgleich(erg):null;
+  const felder=q=>({name:q.name,buchung:q.buchung,gruppen:q.gruppen,ferien:q.ferien,
+    ferienHaken:q.ferienHaken,telefon:q.telefon,allergien:q.allergien,sonstiges:q.sonstiges,abholer:q.abholer});
+  const kinder=erg.kinder.map(q=>{
+    const alt=ab&&ab.paare.get(q);
+    // Wiedererkannt: Nummer behalten, damit die Häkchen dieses Kindes bestehen bleiben
+    return alt?Object.assign(leeresKind(),alt,felder(q),{id:alt.id,aktiv:true}):Object.assign(leeresKind(),felder(q));
+  });
+  // Wer nicht mehr in der Mappe steht, wandert ins Archiv statt gelöscht zu werden
+  if(ab) for(const k of ab.fehlen) kinder.push({...k,aktiv:false});
+  const ferienZeiten=zusammen?{...state.ferienZeiten}:{};
+  for(const [w,mo] of Object.entries(zuordnung)){
+    if(!mo) continue;
+    erg.kinder.forEach((q,i)=>{const z=q.ferien[w].zeiten;if(z.some(x=>x.trim()))(ferienZeiten[mo]??={})[kinder[i].id]=[...z];});
+  }
+  const stand={daten:normalisieren({version:1,einstellungen:e,kinder}),
+    eintraege:zusammen?state.eintraege:{},abwesend:zusammen?state.abwesend:{},
+    ferienZeiten,ferienNicht:zusammen?state.ferienNicht:{},letzteSicherung:null,beispiel:false};
+  if(zusammen) nurBekannte(stand);
+  return stand;
+}
+
+/* Frühere Stände und Speicherzustand in den Einstellungen */
+async function renderStaende(){
+  const ziel=$("#staende");
+  if(ohneDb){ziel.innerHTML="<p>Frühere Stände gibt es nur, wenn die App auf dem iPad installiert ist.</p>";return;}
+  try{
+    const heute="tag-"+isoTag(new Date());
+    const ks=(await dbSchluessel()).map(String).filter(k=>(k.startsWith("tag-")&&k!==heute)||k.startsWith("vor-")).sort((a,b)=>b.slice(4).localeCompare(a.slice(4)));
+    const zeilen=[];
+    for(const k of ks){
+      const s=await dbLesen(k); if(!s||!s.daten) continue;
+      const wann=k.startsWith("tag-")
+        ?`Stand vom ${new Date(k.slice(4)+"T12:00").toLocaleDateString("de-DE",{weekday:"short",day:"2-digit",month:"2-digit",year:"numeric"})}`
+        :`${esc(s.grund||"Stand")} · ${new Date(k.slice(4)).toLocaleString("de-DE",{day:"2-digit",month:"2-digit",year:"numeric",hour:"2-digit",minute:"2-digit"})}`;
+      zeilen.push(`<li><span>${wann}<small>${s.daten.kinder.length} Kinder</small></span><button class="knopf" data-zurueck="${esc(k)}">Zurückholen</button></li>`);
+    }
+    ziel.innerHTML=zeilen.length?`<ul class="staende">${zeilen.join("")}</ul>`:"<p>Noch keine früheren Stände. Ab morgen legt die App jeden Tag einen an.</p>";
+  }catch(e){ziel.innerHTML="<p>Die früheren Stände ließen sich nicht lesen.</p>";}
+}
+async function speicherStatus(){
+  const el=$("#speicherStatus");
+  if(ohneDb){el.textContent="Hier steht keine Datenbank zur Verfügung – die Daten liegen im einfachen Browserspeicher.";return;}
+  let dauerhaft=false; try{dauerhaft=!!(await navigator.storage?.persisted?.());}catch(e){}
+  el.textContent=dauerhaft?"Der Speicher dieser App ist als dauerhaft markiert und wird vom System nicht geleert."
+    :"Die Daten liegen in der Datenbank dieses iPads. Als App auf dem Home-Bildschirm werden sie nicht automatisch gelöscht.";
+}
+
+let hinweisUhr, rueckStand=null;
+function zeigeHinweis(t,mitRueckgaengig){
+  const el=$("#toast");
+  el.innerHTML=esc(t)+(mitRueckgaengig?` <button class="knopf flach" data-rueck>Rückgängig</button>`:"");
+  el.hidden=false; clearTimeout(hinweisUhr);
+  hinweisUhr=setTimeout(()=>el.hidden=true,mitRueckgaengig?9000:3500);
+}
+/* Rückgängig: merkt sich den Stand vor einer größeren Änderung – eine Stufe */
+function merkeStand(){rueckStand=JSON.parse(JSON.stringify(state));}
+$("#toast").onclick=async ev=>{
+  if(!ev.target.closest("[data-rueck]")||!rueckStand) return;
+  state=vervollstaendigen(rueckStand); rueckStand=null;
+  await jetztSpeichern(); renderBereich(); zeigeHinweis("Rückgängig gemacht.");
+};
+
+/* ------------------------------------------------------------------
+   Ereignisse
+------------------------------------------------------------------ */
+document.querySelector(".bereiche").onclick=ev=>{const b=ev.target.closest("button");if(b){ui.bereich=b.dataset.bereich;renderBereich();nachOben();}};
+$("#register").onclick=ev=>{const b=ev.target.closest("[data-liste]");if(b){
+  if(b.dataset.liste==="jetzt"&&ui.liste!=="jetzt") ui.vorherigeListe=ui.liste;
+  ui.liste=b.dataset.liste;merkeUi();renderListe();}};
+$("#blattkopf").onclick=ev=>{
+  if(ev.target.closest("[data-drucken]")) return window.print();
+  if(ev.target.closest("[data-vorwoche]")) return vorwochenZeiten();
+  if(!ev.target.closest("#legendeAn")) return;
+  ui.legende=!ui.legende; merkeUi();
+  const kn=$("#legendeAn");
+  $("#legende").hidden=!ui.legende;
+  kn.setAttribute("aria-expanded",ui.legende);
+  kn.textContent=ui.legende?"Legende ausblenden":"Legende";
+};
+/* Die Liste wird nach jedem Tipp neu aufgebaut – deshalb blitzt das Kästchen danach kurz auf */
+function bestaetigeTipp(id,t){
+  const b=$("#liste").querySelector(`.box[data-haken="${CSS.escape(id)}"][data-t="${t}"]`);
+  if(!b) return;
+  b.classList.add("getippt");
+  b.addEventListener("animationend",()=>b.classList.remove("getippt"),{once:true});
+  try{ navigator.vibrate&&navigator.vibrate(10); }catch(e){}   // iPads kennen das nicht, Android-Tablets schon
+}
+$("#liste").onclick=ev=>{
+  const j=ev.target.closest("[data-jetzt]"); if(j) return jetztAbgeholt(j.dataset.jetzt);
+  const h=ev.target.closest("[data-haken]");
+  if(h){const d=isoTag(plusTage(ui.montag,+h.dataset.t)),id=h.dataset.haken,t=h.dataset.t;
+    weiterSchalten(eintrag(d,ui.liste,id,true),d);speichern();renderListe();bestaetigeTipp(id,t);return;}
+  const z=ev.target.closest("[data-zelle]"); if(z) return oeffneTag(z.dataset.zelle,+z.dataset.t,z.dataset.liste);
+  const kd=ev.target.closest("[data-kommt]"); if(kd){setzeNicht(ui.montag,kd.dataset.kommt,false);speichern();return renderListe();}
+  const i=ev.target.closest("[data-info]"); if(i) oeffneInfo(i.dataset.info);
+};
+window.addEventListener("error",ev=>meldeFehler(ev.message));
+window.addEventListener("unhandledrejection",ev=>meldeFehler(ev.reason&&ev.reason.message||ev.reason));
+function meldeFehler(text){
+  const el=$("#fehlerband");
+  el.innerHTML=`<span><b>Etwas ist schiefgelaufen.</b> Die gespeicherten Daten sind davon nicht betroffen. Bitte die App neu starten.<br><small>${esc(String(text||"")).slice(0,160)}</small></span>
+    <button class="knopf" data-neu>Neu laden</button>`;
+  el.hidden=false;
+}
+$("#fehlerband").onclick=ev=>{if(ev.target.closest("[data-neu]"))location.reload();};
+$("#wocheZurueck").onclick=()=>{ui.montag=plusTage(ui.montag,-7);renderListe();};
+$("#wocheVor").onclick=()=>{ui.montag=plusTage(ui.montag,7);renderListe();};
+$("#wocheHeute").onclick=()=>{ui.montag=montag(new Date());const hi=heuteIndex();if(hi>=0)ui.tag=hi;renderListe();};
+$("#nurErwartet").onclick=()=>{
+  if(!ui.nurErwartet&&ui.modus!=="tag"){        // der Filter gilt für einen Tag: dorthin wechseln
+    ui.modus="tag"; const hi=heuteIndex(); ui.tag=hi>=0?hi:0; merkeUi();
+  }
+  ui.nurErwartet=!ui.nurErwartet; renderListe();
+};
+$("#schriftWahl").onclick=ev=>{
+  const b=ev.target.closest("[data-schrift]"); if(!b) return;
+  ui.schrift=b.dataset.schrift; merkeUi(); setzeSchrift();
+};
+$("#themaWahl").onclick=ev=>{
+  const b=ev.target.closest("[data-thema]"); if(!b) return;
+  ui.thema=b.dataset.thema; merkeUi(); setzeThema();
+};
+$("#modusWoche").onclick=()=>{ui.modus="woche";merkeUi();renderListe();};
+$("#modusTag").onclick=()=>{ui.modus="tag";merkeUi();renderListe();};
+$("#tagWahl").onclick=ev=>{const b=ev.target.closest("[data-tag]");if(b){ui.tag=+b.dataset.tag;renderListe();}};
+$("#kinderSuche").oninput=ev=>{ui.kinderSuche=ev.target.value;renderKinder();};
+$("#kinderFilter").onclick=ev=>{const b=ev.target.closest("[data-kfilter]");if(b){ui.kinderFilter=b.dataset.kfilter;renderKinder();}};
+$("#mehrfach").onclick=()=>{ui.auswahlModus=!ui.auswahlModus;if(!ui.auswahlModus)ui.auswahl.clear();renderKinder();};
+$("#kinderTabelle").addEventListener("change",ev=>{
+  const cb=ev.target.closest("[data-wahl]"); if(!cb) return;
+  cb.checked?ui.auswahl.add(cb.dataset.wahl):ui.auswahl.delete(cb.dataset.wahl);
+  $("#sammelZahl").textContent=`${ui.auswahl.size} ausgewählt`;
+});
+$("#sammelleiste").onclick=ev=>{
+  const b=ev.target.closest("[data-sammel]"); if(!b) return;
+  const art=b.dataset.sammel;
+  if(art==="aus"){ui.auswahl.clear();renderKinder();return;}
+  if(!ui.auswahl.size) return zeigeHinweis("Erst Kinder ankreuzen.");
+  const kinder=state.daten.kinder.filter(k=>ui.auswahl.has(k.id));
+  const l=LISTEN.find(x=>x.key===$("#sammelListe").value)||LISTEN[0];
+  const zahl=kinder.length, wort=zahl===1?"Kind":"Kinder";
+  merkeStand();
+  if(art==="archiv") kinder.forEach(k=>k.aktiv=false);
+  else{
+    const an=art==="hinzu";
+    kinder.forEach(k=>{
+      if(l.ferien) k.ferienHaken=an; else k.gruppen[l.gruppe].aktiv=an;
+      if(!an){   // beim Entfernen auch die Buchung lösen, sonst koppelt sie zurück
+        const bu=buchungLesen(k.buchung);
+        if(l.ferien) bu.an.delete("Fe"); else if(l.gruppe==="spaet") bu.an.delete("Sp");
+        k.buchung=buchungText(bu.an,bu.rest);
+      }
+      if(!modus4()) koppeln(k);
+    });
+  }
+  ui.auswahl.clear(); speichern(); renderBereich();
+  zeigeHinweis(art==="archiv"?`${zahl} ${wort} ins Archiv gelegt.`
+    :`${zahl} ${wort} ${art==="hinzu"?"zu „"+listeName(l)+"“ hinzugefügt":"aus „"+listeName(l)+"“ entfernt"}.`,true);
+};
+$("#kindNeu").onclick=()=>oeffneKind(null);
+$("#ansicht-kinder").addEventListener("click",ev=>{const b=ev.target.closest("[data-kind]");if(b)oeffneKind(b.dataset.kind);});
+document.querySelectorAll("[data-ns]").forEach(b=>b.onclick=()=>{ui.ns=b.dataset.ns;renderNachschlagen();});
+$("#nsSuche").oninput=ev=>{ui.nsSuche=ev.target.value;renderNachschlagen();};
+$("#sicherungSpeichern").onclick=sicherungSpeichern;
+$("#sicherungDatei").onchange=ev=>{if(ev.target.files[0])sicherungLaden(ev.target.files[0]);ev.target.value="";};
+$("#listenEinst").addEventListener("input",ev=>{
+  const inp=ev.target.closest("[data-le]"); if(!inp) return;
+  const l=LISTEN.find(x=>x.key===inp.dataset.le), le=listenEinst(l), feld=inp.dataset.feld;
+  if(feld==="an"){
+    if(!inp.checked&&sichtbareListen().length<2){   // eine Liste muss bleiben
+      inp.checked=true;
+      return zeigeHinweis("Mindestens eine Liste muss angezeigt werden.");
+    }
+    le.aus=!inp.checked;
+    if(le.aus){
+      const zahl=kinderFuerListe(l).length;
+      zeigeHinweis(zahl?`${listeName(l)} ist ausgeblendet. Die ${zahl} zugeordneten ${zahl===1?"Kind bleibt":"Kinder bleiben"} gespeichert.`
+        :`${listeName(l)} ist ausgeblendet.`);
+      if(ui.liste===l.key){ui.liste=sichtbareListen()[0].key;merkeUi();}
+    }
+    speichern(); renderEinstellungen(); renderListe(); return;
+  }
+  if(feld==="name"){
+    const alt="Kategorie: "+listeName(l);
+    le.name=inp.value;
+    if((le.untertitel||"").trim()===alt) le.untertitel="";   // Untertitel folgt der Bezeichnung, solange er der Vorgabe entspricht
+    const u=inp.closest("tr").querySelector('[data-feld="untertitel"]'); u.placeholder="Kategorie: "+listeName(l); if(!le.untertitel) u.value="";
+  } else le[feld]=inp.value;
+  speichern();
+});
+document.querySelectorAll('[name="aufbau"]').forEach(r=>r.onchange=()=>{
+  const neu=r.value;
+  if(state.beispiel) state=beispielStand(neu);          // Beispieldaten passend zum Aufbau neu würfeln
+  else state.daten.einstellungen.aufbau=neu;
+  speichern(); ui.liste="klasse_a"; merkeUi();
+  renderBereich();
+  zeigeHinweis(neu==="klassen4"?"Umgestellt auf Klassen 1–4.":"Umgestellt auf Klassen A–C mit Spätdienst und Ferien.");
+});
+$("#ferienEinst").addEventListener("input",ev=>{
+  const inp=ev.target.closest("[data-zr]"); if(!inp) return;
+  state.daten.einstellungen.ferien_zeitraeume[+inp.dataset.zr][inp.dataset.feld]=inp.value; speichern();
+});
+$("#ferienEinst").addEventListener("click",ev=>{
+  const b=ev.target.closest("[data-zr-weg]"); if(!b) return;
+  const z=state.daten.einstellungen.ferien_zeitraeume[+b.dataset.zrWeg];
+  if(confirm(`„${z.name||"Zeitraum"}“ entfernen?`)){state.daten.einstellungen.ferien_zeitraeume.splice(+b.dataset.zrWeg,1);speichern();renderEinstellungen();}
+});
+$("#zeitraumNeu").onclick=()=>{state.daten.einstellungen.ferien_zeitraeume.push({name:"Beweglicher Ferientag",von:"",bis:""});speichern();renderEinstellungen();};
+function vorwochenZeiten(){
+  const vor=state.ferienZeiten[isoTag(plusTage(ui.montag,-7))]||{}, dies=state.ferienZeiten[isoTag(ui.montag)]??={};
+  let n=0;
+  for(const k of kinderFuerListe(aktuelleListe())){
+    if(vor[k.id]?.some(x=>x)&&!dies[k.id]?.some(x=>x)){dies[k.id]=[...vor[k.id]];n++;}
+  }
+  speichern(); renderListe();
+  zeigeHinweis(n?`Zeiten für ${n} ${n===1?"Kind":"Kinder"} aus der Vorwoche übernommen. Bereits eingetragene Zeiten bleiben stehen.`:"Nichts zu übernehmen: In der Vorwoche stehen keine Zeiten, oder diese Woche ist schon ausgefüllt.");
+}
+$("#einstEinrichtung").oninput=ev=>{state.daten.einstellungen.einrichtung=ev.target.value;speichern();$("#einrichtungKopf").textContent=ev.target.value;};
+$("#einstZusatz").oninput=ev=>{state.daten.einstellungen.zusatz_legende=ev.target.value;speichern();};
+$("#einstTelefon").addEventListener("input",ev=>{const i=ev.target.dataset.tel;if(i!=null){state.daten.einstellungen.telefon_spalten[+i]=ev.target.value;speichern();}});
+[["#einstVon","von"],["#einstBis","bis"]].forEach(([s,f])=>$(s).onchange=ev=>{
+  if(zeitTeile(ev.target.value)){state.daten.einstellungen.zeitraster[f]=ev.target.value.trim();speichern();}
+  else{zeigeHinweis("Bitte die Uhrzeit als HH:MM eintragen, z. B. 12:25.");renderEinstellungen();}
+});
+$("#pinEinrichten").onclick=async()=>{
+  if(state.pin){
+    const alt=prompt("Bitte den bisherigen PIN eingeben:");
+    if(alt===null) return;
+    if(await pinHash(alt)!==state.pin) return zeigeHinweis("Der bisherige PIN stimmt nicht.");
+  }
+  const neu=prompt("Neuer PIN (mindestens 4 Zeichen):");
+  if(neu===null) return;
+  if(String(neu).trim().length<4) return zeigeHinweis("Der PIN braucht mindestens 4 Zeichen.");
+  if(prompt("Zur Sicherheit noch einmal eingeben:")!==neu) return zeigeHinweis("Die beiden Eingaben waren verschieden.");
+  state.pin=await pinHash(neu); speichern(); renderEinstellungen();
+  zeigeHinweis("PIN gespeichert. Wer ihn vergisst, kommt nur über „Alle Daten löschen“ und eine Sicherung wieder hinein.");
+};
+$("#pinEntfernen").onclick=async()=>{
+  const alt=prompt("Zum Entfernen den bisherigen PIN eingeben:");
+  if(alt===null) return;
+  if(await pinHash(alt)!==state.pin) return zeigeHinweis("Der PIN stimmt nicht.");
+  state.pin=null; speichern(); renderEinstellungen(); zeigeHinweis("PIN entfernt.");
+};
+$("#pinSperren").onclick=()=>pinFragen();
+$("#einstAufbewahrung").onchange=ev=>{
+  const v=parseInt(ev.target.value,10);
+  state.daten.einstellungen.aufbewahrung_monate=Number.isFinite(v)?Math.max(0,Math.min(120,v)):12;
+  speichern(); renderEinstellungen();
+};
+$("#jetztAufraeumen").onclick=()=>{
+  const m=state.daten.einstellungen.aufbewahrung_monate;
+  if(!m) return zeigeHinweis("Aufbewahrung steht auf 0 – es wird nichts gelöscht.");
+  merkeStand();
+  const weg=aufraeumenEintraege(m);
+  speichern(); renderBereich();
+  zeigeHinweis(weg?`${weg} alte Tage gelöscht.`:"Es gab nichts aufzuräumen.",!!weg);
+};
+$("#einstVorwarnung").onchange=ev=>{
+  const v=parseInt(ev.target.value,10);
+  state.daten.einstellungen.vorwarnung_min=Number.isFinite(v)?Math.max(0,Math.min(240,v)):30;
+  speichern(); renderEinstellungen();
+};
+$("#einstSchritt").onchange=ev=>{const v=parseInt(ev.target.value,10);if(v>0){state.daten.einstellungen.zeitraster.schritt_min=v;speichern();}};
+$("#beispielZurueck").onclick=async()=>{
+  if(state.daten.kinder.length&&!state.beispiel&&!confirm("30 erfundene Kinder laden? Alles, was jetzt auf diesem iPad steht, wird ersetzt und vorher unter „Frühere Stände“ abgelegt.")) return;
+  await vorherSichern("vor dem Laden der Beispieldaten"); merkeStand();
+  state=beispielStand(state.daten.einstellungen.aufbau); jetztSpeichern(); zeigeHinweis("Beispieldaten geladen.",true); renderBereich();
+};
+$("#band").onclick=ev=>{if(ev.target.closest("[data-sichern]"))sicherungSpeichern();};
+$("#allesLoeschen").onclick=async()=>{
+  const antwort=prompt("Wirklich ALLE Daten auf diesem Gerät löschen – Kinder, Häkchen, Einstellungen und frühere Stände?\n\nZum Bestätigen LÖSCHEN eingeben:");
+  if(antwort===null) return;
+  if(antwort.trim().toUpperCase()!=="LÖSCHEN") return zeigeHinweis("Nichts gelöscht. Zum Bestätigen muss „LÖSCHEN“ eingegeben werden.");
+  clearTimeout(speicherUhr); speicherUhr=null;   // sonst schreibt ein ausstehendes Speichern den alten Stand zurück
+  try{ if(!ohneDb) await dbTun("readwrite",s=>s.clear()); }
+  catch(f){ return zeigeHinweis("Löschen hat nicht geklappt: "+(f&&f.message||f)); }
+  try{ localStorage.removeItem(SPEICHER_KEY); localStorage.removeItem(SPEICHER_KEY+".ui"); }catch(e){}
+  state=leererStand(); ui.bereich="liste"; ui.liste="klasse_a";
+  renderBereich(); nachOben();
+  zeigeHinweis("Alle Daten auf diesem Gerät sind gelöscht."); oeffneStart();
+};
+$("#mappeDatei").onchange=async ev=>{
+  const datei=ev.target.files[0]; ev.target.value=""; if(!datei) return;
+  try{
+    const erg=await ImportKern.leseMappe(await datei.arrayBuffer());
+    if(!erg.kinder.length) throw new ImportKern.Fehler("In der Matrix dieser Mappe stehen keine Kinder.");
+    schliesseStart(); oeffneImport(erg,datei.name);
+  }catch(f){zeigeHinweis(f instanceof ImportKern.Fehler?f.message:"Die Datei ließ sich nicht lesen: "+(f&&f.message||f));}
+};
+$("#staende").addEventListener("click",async ev=>{
+  const b=ev.target.closest("[data-zurueck]"); if(!b) return;
+  if(!confirm("Diesen Stand zurückholen? Der jetzige Stand wird vorher abgelegt.")) return;
+  const s=await dbLesen(b.dataset.zurueck); if(!s) return zeigeHinweis("Dieser Stand ist nicht mehr da.");
+  await vorherSichern("vor dem Zurückholen eines Stands"); merkeStand();
+  // Beschnittene Stände bringen die Häkchen ihres Zeitfensters zurück, ältere Tage bleiben stehen
+  state=vervollstaendigen(Speicher.ausSchnappschuss(state,s));
+  await jetztSpeichern(); zeigeHinweis("Stand zurückgeholt.",true); renderBereich();
+});
+
+(async()=>{
+  const geladen=await laden();
+  state=geladen||leererStand();
+  if(!modus4()&&zeitraumFuerWoche(montag(new Date()))) ui.liste="ferien";   // in den Ferien gleich die Ferienliste
+  if(state.pin) pinFragen();
+  renderBereich();
+  if(!geladen) oeffneStart();
+  else if(!ohneDb) await umziehen();   // beim ersten Start nach der Umstellung: monatsweise neu ablegen
+  try{navigator.storage?.persist?.().catch(()=>{});}catch(e){}
+  aufraeumen();
+  if(geladen&&aufraeumenEintraege(state.daten.einstellungen.aufbewahrung_monate)) speichern();   // alte Tage stillschweigend entfernen
+  // Für den Betrieb ohne Internet – nur unter einer echten https-Adresse, nicht als Datei und nicht in der Vorschau
+  if(location.protocol==="https:"&&"serviceWorker" in navigator&&window.self===window.top){
+    navigator.serviceWorker.register("sw.js").catch(()=>{});
+  }
+})();
+</script>
