@@ -14,9 +14,12 @@
   [headers.values]
     Cache-Control = "no-cache"
 
+# Ohne den richtigen Typ nimmt Safari das Manifest nicht an
+# und "Zum Home-Bildschirm" verliert Name und Symbol.
 [[headers]]
   for = "/manifest.webmanifest"
   [headers.values]
+    Content-Type = "application/manifest+json; charset=utf-8"
     Cache-Control = "no-cache"
 
 # Gleiche Schutzregeln wie beim bisherigen Hoster.
