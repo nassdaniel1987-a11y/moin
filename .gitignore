@@ -1,0 +1,4 @@
+# Arbeitsverzeichnis der Netlify-CLI: merkt sich nur, mit welchem
+# Projekt dieser Ordner verknüpft ist. Das ist Zustand des jeweiligen
+# Rechners und gehört nicht ins Repo.
+.netlify/
